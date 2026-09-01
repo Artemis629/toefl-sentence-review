@@ -210,6 +210,45 @@
     color:var(--clay); margin-bottom:4px; display:block;
   }
 
+  .deep-explanation{
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;
+    margin-top:14px; border:1px solid #c9ddd8; border-radius:12px; overflow:hidden;
+    background:#fff;
+  }
+  .deep-title{
+    padding:13px 16px; background:var(--teal-deep); color:#fff;
+    font-size:15px; font-weight:800; letter-spacing:.01em;
+  }
+  .chunk-compare{padding:13px 16px; background:#faf8f3; border-bottom:1px solid var(--line);}
+  .chunk-row{display:flex; align-items:flex-start; gap:9px; font-size:13px; line-height:1.65;}
+  .chunk-row + .chunk-row{margin-top:8px;}
+  .chunk-row-label{width:72px; flex:none; color:var(--ink-soft); font-size:11px; font-weight:800; padding-top:2px;}
+  .chunk-token{
+    display:inline-block; padding:2px 7px; margin:0 4px 4px 0; border-radius:6px;
+    background:var(--teal-mist); color:var(--teal-deep); font-weight:650;
+  }
+  .chunk-token.bad{background:var(--error-mist); color:var(--error); text-decoration:line-through;}
+  .deep-grid{display:grid; grid-template-columns:1fr 1fr;}
+  .deep-step{padding:14px 16px; border-bottom:1px solid var(--line); min-height:105px;}
+  .deep-step:nth-child(odd){border-right:1px solid var(--line);}
+  .deep-step-num{
+    display:inline-flex; align-items:center; justify-content:center; width:23px; height:23px;
+    border-radius:50%; margin-right:7px; background:var(--teal-mist); color:var(--teal-deep);
+    font-size:11px; font-weight:900;
+  }
+  .deep-step-title{font-size:13px; font-weight:850; color:var(--teal-deep);}
+  .deep-step p{font-size:13px; line-height:1.72; margin:7px 0 0; color:var(--ink);}
+  .structure-formula{
+    margin-top:8px; padding:8px 10px; border-radius:8px; background:var(--paper);
+    color:var(--clay); font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px; line-height:1.65; font-weight:700;
+  }
+  .deep-warning{color:var(--error); font-weight:700;}
+  .deep-rule{
+    padding:12px 16px; background:var(--clay-mist); color:#724618;
+    font-size:13px; line-height:1.7; font-weight:700;
+  }
+
   .done-msg{
     font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;
     text-align:center; padding:60px 20px; color:var(--ink-soft);
@@ -395,6 +434,11 @@
     .card-head-actions{max-width:58%;}
     .qlist-row{align-items:flex-start; padding:13px 14px;}
     .qlist-num{width:58px;}
+    .deep-grid{grid-template-columns:1fr;}
+    .deep-step:nth-child(odd){border-right:none;}
+    .deep-step{min-height:0;}
+    .chunk-row{display:block;}
+    .chunk-row-label{width:auto; margin-bottom:4px;}
   }
 
   footer{
@@ -457,12 +501,12 @@
   <div class="view" id="view-method">
     <div class="method-hero">
       <h2>先定骨架，再挂成分</h2>
-      <p>你不是“不懂语法”，而是看见词块后太快开始排列，主句骨架还没定好，就被介词短语、从句和副词带走了。最后一份资料新增 2 题并完成总核对；累计 244 道题中，基础语序已有 50 题，是当前最该自动化的底层动作。</p>
+      <p>你不是“不懂语法”，而是看见词块后太快开始排列，主句骨架还没定好，就被介词短语、从句和副词带走了。本轮三份资料新增 20 题，并修正了旧题中的词块边界；累计 264 道题中，基础语序已有 53 题，是当前最该自动化的底层动作。</p>
     </div>
 
     <div class="stat-row body-font">
-      <div class="stat"><div class="num">244</div><div class="lbl">累计题目</div></div>
-      <div class="stat"><div class="num">50</div><div class="lbl">基础语序题</div></div>
+      <div class="stat"><div class="num">264</div><div class="lbl">累计题目</div></div>
+      <div class="stat"><div class="num">53</div><div class="lbl">基础语序题</div></div>
       <div class="stat"><div class="num">11</div><div class="lbl">可检索语法编号</div></div>
       <div class="stat"><div class="num">8 秒</div><div class="lbl">先搭骨架再落词块</div></div>
     </div>
@@ -573,12 +617,13 @@ const QUESTIONS = [
       }
     ],
     "candidates": [
-      "to attend",
-      "have",
-      "do",
-      "I",
       "not",
-      "time"
+      "time",
+      "I",
+      "none",
+      "have",
+      "to attend",
+      "do"
     ],
     "correct": [
       "do",
@@ -1316,7 +1361,7 @@ const QUESTIONS = [
   },
   {
     "id": "q13",
-    "number": "题目 4 (图书馆)",
+    "number": "题目4 (03-06 Sentence Construction)",
     "speakerA": "What do you think of the new library?",
     "frame": [
       {
@@ -1341,43 +1386,26 @@ const QUESTIONS = [
         "blank": true
       },
       {
-        "blank": true
-      },
-      {
-        "blank": true
-      },
-      {
-        "blank": true
-      },
-      {
-        "blank": true
+        "fixed": "."
       }
     ],
     "candidates": [
-      "the",
-      "library",
-      "renovations",
-      "make",
-      "it",
-      "the",
-      "recent",
-      "to",
+      "the recent",
+      "make it",
       "look",
-      "very",
-      "impressive."
+      "renovations",
+      "very impressive",
+      "to",
+      "the library"
     ],
     "correct": [
-      "the",
-      "recent",
+      "the recent",
       "renovations",
       "to",
-      "the",
-      "library",
-      "make",
-      "it",
+      "the library",
+      "make it",
       "look",
-      "very",
-      "impressive."
+      "very impressive"
     ],
     "answer": "The recent renovations to the library make it look very impressive.",
     "weakTag": "causative",
@@ -5284,8 +5312,8 @@ const QUESTIONS = [
   },
   {
     "id": "q78",
-    "number": "题目3 (03-08 Workshop Cancellation)",
-    "speakerA": "Were you able to solve the problem?",
+    "number": "题目1 (03-23 Sentence Construction)",
+    "speakerA": "Were you able to solve the final math problem for the algebra assignment?",
     "frame": [
       {
         "blank": true
@@ -14164,7 +14192,7 @@ const QUESTIONS = [
       "I'm",
       "already part",
       "too",
-      "activities",
+      "many",
       "of"
     ],
     "correct": [
@@ -14172,7 +14200,7 @@ const QUESTIONS = [
       "already part",
       "of",
       "too",
-      "activities"
+      "many"
     ],
     "answer": "I'm already part of too many activities.",
     "weakTag": "word_order_basic",
@@ -14196,7 +14224,7 @@ const QUESTIONS = [
         "blank": true
       },
       {
-        "fixed": "many."
+        "fixed": "activities."
       }
     ],
     "segments": [
@@ -14495,7 +14523,7 @@ const QUESTIONS = [
       "I'm",
       "already part",
       "too",
-      "activities",
+      "many",
       "of"
     ],
     "correct": [
@@ -14503,7 +14531,7 @@ const QUESTIONS = [
       "already part",
       "of",
       "too",
-      "activities"
+      "many"
     ],
     "answer": "I'm already part of too many activities.",
     "weakTag": "word_order_basic",
@@ -14527,7 +14555,7 @@ const QUESTIONS = [
         "blank": true
       },
       {
-        "fixed": "many."
+        "fixed": "activities."
       }
     ],
     "segments": [
@@ -16040,6 +16068,286 @@ const QUESTIONS = [
         "tag": "plain"
       }
     ]
+  },
+  {
+    "id": "q245",
+    "number": "题目10 (04-12 Sentence Construction)",
+    "speakerA": "Have you decided which chemistry class to register for?",
+    "candidates": ["sure", "choose", "one", "still not", "I'm", "to", "which"],
+    "correct": ["I'm", "still not", "sure", "which", "one", "to", "choose"],
+    "answer": "I'm still not sure which one to choose.",
+    "weakTag": "nounclause",
+    "tagLabel": "which + 名词 + to do 嵌入结构",
+    "explainEN": "The main clause is 'I'm still not sure'. The embedded wh-infinitive 'which one to choose' names the unresolved choice; 'which one' must stay before 'to choose'.",
+    "explainZH": "先完成主干 I'm still not sure（我仍然不确定）。后面的 which one to choose 整体说明“不确定什么”：which one 是“哪一个”，to choose 是“去选择”。不能排成 to choose which one，因为本题使用的是嵌入式疑问结构，疑问短语要放在不定式前。",
+    "frame": [{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"."}],
+    "segments": [{"t":"I'm still not sure ","tag":"plain"},{"t":"which one to choose","tag":"nounclause"},{"t":".","tag":"plain"}]
+  },
+  {
+    "id": "q246",
+    "number": "题目2 (08-25 Sentence Arrangement)",
+    "speakerA": "Have you decided on a candidate for the student internship position yet?",
+    "candidates": ["us the", "been", "the applicant", "has", "who impressed", "most"],
+    "correct": ["the applicant", "who impressed", "us the", "most", "has", "been"],
+    "answer": "The applicant who impressed us the most has been selected.",
+    "weakTag": "rel_that_subject",
+    "tagLabel": "who 主语关系从句 + 长主语封口",
+    "explainEN": "The relative clause 'who impressed us the most' modifies 'the applicant'. After that long subject closes, the main passive predicate is 'has been selected'.",
+    "explainZH": "先找先行词 the applicant（那位申请者）。who impressed us the most 是定语从句，回答“哪一位申请者”，所以必须紧跟 applicant。整个长主语 [The applicant who impressed us the most] 结束后，才能接主句谓语 has been selected。不要把从句里的 impressed 和主句里的 has been selected 混在一起。",
+    "frame": [{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"selected."}],
+    "segments": [{"t":"The applicant ","tag":"plain"},{"t":"who impressed us the most","tag":"relclause"},{"t":" has been selected.","tag":"plain"}]
+  },
+  {
+    "id": "q247",
+    "number": "题目4 (08-25 Sentence Arrangement)",
+    "speakerA": "Why didn't you bring your laptop to class today?",
+    "candidates": ["for", "classwork", "I use", "was", "the laptop", "undergoing"],
+    "correct": ["the laptop", "I use", "for", "classwork", "was", "undergoing"],
+    "answer": "The laptop I use for classwork was undergoing maintenance.",
+    "weakTag": "rel_contact",
+    "tagLabel": "省略关系代词的定语从句 + 过去进行时",
+    "explainEN": "'I use for classwork' is a contact relative clause modifying 'the laptop'; the omitted object is the laptop. The main predicate begins only after the relative clause: 'was undergoing maintenance'.",
+    "explainZH": "主句主语先从 the laptop 开始。紧跟其后的 I use for classwork 修饰 laptop，相当于 that I use for classwork；that 在从句中作 use 的宾语，所以可以省略。把这段从句封口以后，主句谓语才是 was undergoing maintenance。",
+    "frame": [{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"maintenance."}],
+    "segments": [{"t":"The laptop ","tag":"plain"},{"t":"I use for classwork","tag":"relclause"},{"t":" was undergoing maintenance.","tag":"plain"}]
+  },
+  {
+    "id": "q248",
+    "number": "题目5 (08-25 Sentence Arrangement)",
+    "speakerA": "Who will be leading the workshop tomorrow?",
+    "candidates": ["would", "the coordinator", "mentioned", "the", "facilitator", "be", "that Doctor Lee"],
+    "correct": ["the coordinator", "mentioned", "that Doctor Lee", "would", "be", "the", "facilitator"],
+    "answer": "The coordinator mentioned that Doctor Lee would be the facilitator.",
+    "weakTag": "nounclause",
+    "tagLabel": "mentioned + that 宾语从句",
+    "explainEN": "The main clause is 'The coordinator mentioned'. Its object is the that-clause 'that Doctor Lee would be the facilitator', which keeps normal subject-verb order.",
+    "explainZH": "先排主句 The coordinator mentioned（协调员提到……）。mentioned 后面需要说明“提到了什么”，所以接完整的 that 宾语从句。进入从句后，主语是 Doctor Lee，谓语是 would be，表语是 the facilitator，顺序不能倒装。",
+    "frame": [{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"."}],
+    "segments": [{"t":"The coordinator mentioned ","tag":"plain"},{"t":"that Doctor Lee would be the facilitator","tag":"nounclause"},{"t":".","tag":"plain"}]
+  },
+  {
+    "id": "q249",
+    "number": "题目1 (08-12 Campus Questions)",
+    "speakerA": "Why did you attend the job recruitment seminar?",
+    "candidates": ["what types", "are most", "beneficial", "learn", "of courses", "curious to"],
+    "correct": ["curious to", "learn", "what types", "of courses", "are most", "beneficial"],
+    "answer": "I was curious to learn what types of courses are most beneficial.",
+    "weakTag": "nounclause",
+    "tagLabel": "curious to learn + what 主语从句",
+    "explainEN": "After the fixed opening 'I was', use 'curious to learn'. The embedded clause is 'what types of courses are most beneficial', where the full subject precedes 'are'.",
+    "explainZH": "题干已经给出 I was，先接 curious to learn，构成“我很想了解……”。后面的 what types of courses are most beneficial 是 learn 的宾语从句。完整主语是 what types of courses，必须把它说完以后才接谓语 are most beneficial。",
+    "frame": [{"fixed":"I was"},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"."}],
+    "segments": [{"t":"I was curious to learn ","tag":"plain"},{"t":"what types of courses are most beneficial","tag":"nounclause"},{"t":".","tag":"plain"}]
+  },
+  {
+    "id": "q250",
+    "number": "题目3 (08-12 Campus Questions)",
+    "speakerA": "How did the students feel about the event being postponed?",
+    "candidates": ["the rescheduling", "led to", "what factors", "to know"],
+    "correct": ["to know", "what factors", "led to", "the rescheduling"],
+    "answer": "They wanted to know what factors led to the rescheduling.",
+    "weakTag": "nounclause",
+    "tagLabel": "what 作嵌入问句主语",
+    "explainEN": "'Wanted' is followed by 'to know'. In the embedded question, 'what factors' is the subject, so it is followed directly by 'led to' without auxiliary inversion.",
+    "explainZH": "先接固定结构 wanted to know（想知道）。后面是嵌入问句 what factors led to the rescheduling。这里 what factors 本身就是从句主语，led 是它的谓语，所以不需要、也不能加 did 或倒装。",
+    "frame": [{"fixed":"They wanted"},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"."}],
+    "segments": [{"t":"They wanted to know ","tag":"plain"},{"t":"what factors led to the rescheduling","tag":"nounclause"},{"t":".","tag":"plain"}]
+  },
+  {
+    "id": "q251",
+    "number": "题目4 (08-12 Campus Questions)",
+    "speakerA": "Has anyone submitted the group project?",
+    "candidates": ["have turned", "it", "in", "the team members", "of"],
+    "correct": ["of", "the team members", "have turned", "it", "in"],
+    "answer": "None of the team members have turned it in yet.",
+    "weakTag": "word_order_basic",
+    "tagLabel": "none of + 名词 + have turned it in",
+    "explainEN": "Complete the subject 'None of the team members', then use the present-perfect verb phrase 'have turned it in'. The pronoun 'it' must stay inside the phrasal verb 'turn it in'.",
+    "explainZH": "题干已经给出 None，先补成完整主语 None of the team members。主语结束后才接谓语 have turned。turn in 是“提交”，但宾语是代词 it 时必须放在中间：turn it in，不能说 turn in it。最后接 yet。",
+    "frame": [{"fixed":"None"},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"yet."}],
+    "segments": [{"t":"None of the team members have turned it in yet.","tag":"plain"}]
+  },
+  {
+    "id": "q252",
+    "number": "题目10 (08-12 Campus Questions)",
+    "speakerA": "The seminar on financial management was very insightful.",
+    "candidates": ["know if", "will be", "do you", "the slides", "available"],
+    "correct": ["do you", "know if", "the slides", "will be", "available"],
+    "answer": "Do you know if the slides will be available online?",
+    "weakTag": "nounclause",
+    "tagLabel": "外层问句 + if 嵌入问句",
+    "explainEN": "Only the outer question is inverted: 'Do you know'. The if-clause keeps statement order: 'if the slides will be available online'.",
+    "explainZH": "先完成外层问句 Do you know。接着 if 开启宾语从句；从句内部不是独立问句，要恢复陈述语序：the slides + will be + available。不能排成 if will the slides be。",
+    "frame": [{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"online?"}],
+    "segments": [{"t":"Do you know ","tag":"plain"},{"t":"if the slides will be available online","tag":"nounclause"},{"t":"?","tag":"plain"}]
+  },
+  {
+    "id": "q253",
+    "number": "题目1 (07-22 Sentence Arrangement)",
+    "speakerA": "What did Sarah say about the meeting tomorrow?",
+    "candidates": ["to know", "if it would", "if she", "arrived late", "wanted", "be", "ok"],
+    "correct": ["wanted", "to know", "if it would", "be", "ok", "if she", "arrived late"],
+    "answer": "She wanted to know if it would be ok if she arrived late.",
+    "weakTag": "nounclause",
+    "tagLabel": "wanted to know + 双层 if 从句",
+    "explainEN": "The main predicate is 'wanted to know'. Its object is the first if-clause, and the condition inside it is expressed by a second if-clause: 'if she arrived late'.",
+    "explainZH": "先完成 She wanted to know。第一个 if 引出“她想知道的内容”：if it would be ok（是否可以）。第二个 if 再说明条件：if she arrived late（如果她迟到）。两个 if 各管一层，内部都保持主语在前、谓语在后。",
+    "frame": [{"fixed":"She"},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"."}],
+    "segments": [{"t":"She wanted to know ","tag":"plain"},{"t":"if it would be ok if she arrived late","tag":"nounclause"},{"t":".","tag":"plain"}]
+  },
+  {
+    "id": "q254",
+    "number": "题目1 (07-16 Sentence Arrangement)",
+    "speakerA": "I just got a new internship!",
+    "candidates": ["of", "work", "be", "will", "what type", "doing"],
+    "correct": ["what type", "of", "work", "will", "be", "doing"],
+    "answer": "What type of work will you be doing?",
+    "weakTag": "question_word_order",
+    "tagLabel": "what type of + 将来进行时疑问语序",
+    "explainEN": "Keep the wh-phrase 'what type of work' together. Then use question order with the fixed subject 'you': 'will you be doing'.",
+    "explainZH": "先把完整疑问短语拼出来：what type of work（什么类型的工作）。它整体放句首。之后是疑问语序 will + you + be doing；截图中的 you 已经固定在题干里，所以不能再移动或重复。",
+    "frame": [{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"you"},{"blank":true},{"blank":true},{"fixed":"?"}],
+    "segments": [{"t":"What type of work will you be doing?","tag":"plain"}]
+  },
+  {
+    "id": "q255",
+    "number": "题目4 (07-16 Sentence Arrangement)",
+    "speakerA": "Who is your English professor?",
+    "candidates": ["the debate team", "advises", "who", "my English teacher", "the professor"],
+    "correct": ["the professor", "who", "advises", "the debate team", "my English teacher"],
+    "answer": "The professor who advises the debate team is my English teacher.",
+    "weakTag": "rel_that_subject",
+    "tagLabel": "who 主语关系从句 + 长主语",
+    "explainEN": "'Who advises the debate team' modifies 'the professor'. The fixed 'is' is the main linking verb and comes only after the whole long subject.",
+    "explainZH": "先行词是 the professor。who advises the debate team 回答“哪一位教授”，因此紧跟 professor；who 是从句主语，advises 是从句谓语。整个长主语 [The professor who advises the debate team] 结束后，题干固定的 is 才是主句谓语。",
+    "frame": [{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"is"},{"blank":true},{"fixed":"."}],
+    "segments": [{"t":"The professor ","tag":"plain"},{"t":"who advises the debate team","tag":"relclause"},{"t":" is my English teacher.","tag":"plain"}]
+  },
+  {
+    "id": "q256",
+    "number": "题目3 (06-20 Sentence Structure)",
+    "speakerA": "Who is attending the workshop tomorrow?",
+    "candidates": ["it", "for", "my classmate", "who", "signed up"],
+    "correct": ["my classmate", "who", "signed up", "for", "it"],
+    "answer": "My classmate knows who signed up for it.",
+    "weakTag": "nounclause",
+    "tagLabel": "knows + who 主语嵌入问句",
+    "explainEN": "The fixed main verb 'knows' follows 'My classmate'. Its object is the embedded question 'who signed up for it', where 'who' itself is the subject.",
+    "explainZH": "先排主句 My classmate knows。knows 后面接“知道的内容”——who signed up for it。这里 who 本身就是从句主语，所以直接接谓语 signed up；for it 属于固定搭配 sign up for something。",
+    "frame": [{"blank":true},{"fixed":"knows"},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"."}],
+    "segments": [{"t":"My classmate knows ","tag":"plain"},{"t":"who signed up for it","tag":"nounclause"},{"t":".","tag":"plain"}]
+  },
+  {
+    "id": "q257",
+    "number": "题目10 (05-13 Sentence Construction)",
+    "speakerA": "Where did you get that backpack?",
+    "candidates": ["a student", "I got", "offers", "it", "from the", "that"],
+    "correct": ["I got", "it", "from the", "that", "offers", "a student"],
+    "answer": "I got it from the store that offers a student discount.",
+    "weakTag": "rel_that_subject",
+    "tagLabel": "that 主语关系从句修饰 store",
+    "explainEN": "The main clause is 'I got it from the store'. The relative clause 'that offers a student discount' attaches directly to 'store'; 'that' is its subject.",
+    "explainZH": "先完成主句 I got it from the store。接着问“哪一家店”，答案是 that offers a student discount，因此这段定语从句必须紧跟 store。that 在从句中作主语，后面直接接谓语 offers；a student discount 是 offers 的宾语。",
+    "frame": [{"blank":true},{"blank":true},{"blank":true},{"fixed":"store"},{"blank":true},{"blank":true},{"blank":true},{"fixed":"discount."}],
+    "segments": [{"t":"I got it from the store ","tag":"plain"},{"t":"that offers a student discount","tag":"relclause"},{"t":".","tag":"plain"}]
+  },
+  {
+    "id": "q258",
+    "number": "题目6 (03-17 Sentence Construction)",
+    "speakerA": "Where did you leave your backpack?",
+    "candidates": ["I", "left", "where", "do not", "when", "my", "backpack", "remember"],
+    "correct": ["I", "do not", "remember", "where", "left", "my", "backpack"],
+    "answer": "I do not remember where I left my backpack.",
+    "weakTag": "nounclause",
+    "tagLabel": "where 嵌入问句 + 陈述语序",
+    "explainEN": "The main clause is 'I do not remember'. The embedded where-clause uses statement order around the fixed subject 'I': 'where I left my backpack'. 'When' is a distractor.",
+    "explainZH": "先完成主句 I do not remember。remember 后面接 where 引导的宾语从句。进入从句后不能倒装，必须是 where + I + left + my backpack。截图中的第二个 I 已固定在题干里；when 是干扰项，因为问题问的是地点。",
+    "frame": [{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"I"},{"blank":true},{"blank":true},{"blank":true},{"fixed":"."}],
+    "segments": [{"t":"I do not remember ","tag":"plain"},{"t":"where I left my backpack","tag":"nounclause"},{"t":".","tag":"plain"}]
+  },
+  {
+    "id": "q259",
+    "number": "题目2 (02-26 Sentence Construction)",
+    "speakerA": "I finished reading the textbook you lent me.",
+    "candidates": ["I", "it", "can", "back", "have"],
+    "correct": ["can", "I", "have", "it", "back"],
+    "answer": "Can I have it back now?",
+    "weakTag": "question_word_order",
+    "tagLabel": "Can I + have + 代词宾语 + back",
+    "explainEN": "A yes-no question with a modal begins 'Can I'. The verb phrase is 'have it back', with the pronoun object immediately after 'have'.",
+    "explainZH": "这是情态动词问句，先把 can 提到主语 I 前面：Can I。后面是固定表达 have something back（把某物拿回来）；宾语是代词 it，所以顺序是 have it back。now 已经固定在句尾。",
+    "frame": [{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"now?"}],
+    "segments": [{"t":"Can I have it back now?","tag":"plain"}]
+  },
+  {
+    "id": "q260",
+    "number": "题目4 (02-26 Sentence Construction)",
+    "speakerA": "What did that student just ask you?",
+    "candidates": ["our discussion", "he", "topics", "in", "wanted to know", "were covered"],
+    "correct": ["he", "wanted to know", "topics", "were covered", "in", "our discussion"],
+    "answer": "He wanted to know what topics were covered in our discussion.",
+    "weakTag": "nounclause",
+    "tagLabel": "what topics 主语 + 被动语态嵌入问句",
+    "explainEN": "The main clause is 'He wanted to know'. In the embedded clause, 'what topics' is the subject and 'were covered' is its passive predicate.",
+    "explainZH": "先排主句 He wanted to know。题干已经固定 what，后面先接 topics，组成完整从句主语 what topics；再接被动谓语 were covered，最后接范围 in our discussion。这里 what topics 作主语，所以不是 what were topics。",
+    "frame": [{"blank":true},{"blank":true},{"fixed":"what"},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"."}],
+    "segments": [{"t":"He wanted to know ","tag":"plain"},{"t":"what topics were covered in our discussion","tag":"nounclause"},{"t":".","tag":"plain"}]
+  },
+  {
+    "id": "q261",
+    "number": "题目2 (02-10 Sentence Construction)",
+    "speakerA": "Who inspired you to pursue this major?",
+    "candidates": ["recall", "can't", "who", "me", "first encouraged"],
+    "correct": ["can't", "recall", "who", "first encouraged", "me"],
+    "answer": "I can't recall who first encouraged me.",
+    "weakTag": "nounclause",
+    "tagLabel": "who 作嵌入问句主语",
+    "explainEN": "After the fixed subject 'I', use 'can't recall'. In the embedded question, 'who' is the subject, followed directly by 'first encouraged me'.",
+    "explainZH": "题干固定 I，先接 can't recall。后面的 who first encouraged me 是 recall 的宾语从句。who 本身就是从句主语，first 是副词，encouraged 是谓语，me 是宾语；因此不能排成 who me first encouraged。",
+    "frame": [{"fixed":"I"},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"."}],
+    "segments": [{"t":"I can't recall ","tag":"plain"},{"t":"who first encouraged me","tag":"nounclause"},{"t":".","tag":"plain"}]
+  },
+  {
+    "id": "q262",
+    "number": "题目4 (02-10 Sentence Construction)",
+    "speakerA": "Why aren't you attending the chemistry lab today?",
+    "candidates": ["have", "a", "appointment", "conflicting"],
+    "correct": ["have", "conflicting", "appointment"],
+    "answer": "I have a conflicting appointment.",
+    "weakTag": "word_order_basic",
+    "tagLabel": "have + 冠词 + 形容词 + 名词",
+    "explainEN": "The fixed frame supplies 'I' and 'a'. Put the verb 'have' after the subject, then place the adjective 'conflicting' before the noun 'appointment'. The extra 'a' is a distractor.",
+    "explainZH": "题干已经给出主语 I 和冠词 a。主语后先放谓语 have；a 后面要组成名词短语 conflicting appointment，形容词 conflicting 放在名词 appointment 前。候选中的第二个 a 是干扰项，不能重复。",
+    "frame": [{"fixed":"I"},{"blank":true},{"fixed":"a"},{"blank":true},{"blank":true},{"fixed":"."}],
+    "segments": [{"t":"I have a conflicting appointment.","tag":"plain"}]
+  },
+  {
+    "id": "q263",
+    "number": "题目6 (02-10 Sentence Construction)",
+    "speakerA": "Can you guess where I heard about the seminar?",
+    "candidates": ["been", "have", "a", "could it", "former", "from"],
+    "correct": ["could it", "have", "been", "from", "a", "former"],
+    "answer": "Could it have been from a former classmate?",
+    "weakTag": "question_word_order",
+    "tagLabel": "Could + 主语 + have been + from",
+    "explainEN": "The modal question begins 'Could it'. The perfect modal chain must remain intact: 'could it have been', followed by the source phrase 'from a former classmate'.",
+    "explainZH": "这是情态动词疑问句，先用 Could it。随后 have been 是一个完整的完成时链，不能拆开。最后用介词短语 from a former classmate 表示消息来源；classmate 已经固定在题干中。",
+    "frame": [{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"classmate?"}],
+    "segments": [{"t":"Could it have been from a former classmate?","tag":"plain"}]
+  },
+  {
+    "id": "q264",
+    "number": "题目2 (02-02 Sentence Construction)",
+    "speakerA": "Did you enjoy the art exhibition?",
+    "candidates": ["find", "not", "I", "the artwork", "did", "obstruct", "appealing"],
+    "correct": ["did", "not", "find", "the artwork", "appealing"],
+    "answer": "I did not find the artwork appealing.",
+    "weakTag": "word_order_basic",
+    "tagLabel": "did not + 原形 + 宾语 + 宾语补足语",
+    "explainEN": "After the fixed subject 'I', use 'did not' plus the base verb 'find'. 'The artwork' is the object and 'appealing' is an object complement describing it. 'I' and 'obstruct' are distractors.",
+    "explainZH": "题干已经给出主语 I，后面用 did not + 动词原形 find。find 在这里表示“觉得”，结构是 find + 宾语 + 形容词宾补：find the artwork appealing（觉得艺术品有吸引力）。多余的 I 和 obstruct 都是干扰项。",
+    "frame": [{"fixed":"I"},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"blank":true},{"fixed":"."}],
+    "segments": [{"t":"I did not find the artwork appealing.","tag":"plain"}]
   }
 ];
 
@@ -16296,6 +16604,28 @@ Object.assign(QUESTION_TRANSLATIONS, {
   q243:["我报名了下周的绘画课。","你知道我需要带什么材料吗？"],
   q244:["你最喜欢去哪里放松？","校园附近的那座公园是我最喜欢的地方。"]
 });
+Object.assign(QUESTION_TRANSLATIONS, {
+  q245:["你决定选哪门化学课了吗？","我仍然不确定该选择哪一门。"],
+  q246:["你已经决定学生实习岗位的人选了吗？","给我们留下最深印象的申请者已经被选中了。"],
+  q247:["你今天为什么没带笔记本电脑来上课？","我用于课堂学习的笔记本电脑当时正在维修。"],
+  q248:["明天谁来主持研讨会？","协调员提到，李博士将担任主持人。"],
+  q249:["你为什么参加招聘研讨会？","我想了解哪些类型的课程最有帮助。"],
+  q250:["学生们对活动被推迟有什么感受？","他们想知道哪些因素导致了这次重新安排。"],
+  q251:["有人提交小组项目了吗？","团队成员还没有任何人提交。"],
+  q252:["财务管理研讨会很有启发性。","你知道讲义是否会发布到网上吗？"],
+  q253:["莎拉对明天的会议说了什么？","她想知道，如果她迟到了是否可以。"],
+  q254:["我刚得到一份新的实习工作！","你将从事哪种类型的工作？"],
+  q255:["谁是你的英语教授？","指导辩论队的那位教授是我的英语老师。"],
+  q256:["明天谁会参加研讨会？","我的同学知道谁报名参加了。"],
+  q257:["你的那个背包是在哪里买的？","我是在一家提供学生折扣的商店买的。"],
+  q258:["你把背包放在哪里了？","我不记得自己把背包放在哪里了。"],
+  q259:["我已经读完了你借给我的课本。","现在可以把它还给我吗？"],
+  q260:["那个学生刚才问了你什么？","他想知道我们的讨论涵盖了哪些主题。"],
+  q261:["谁启发你攻读这个专业？","我想不起来最先鼓励我的人是谁。"],
+  q262:["你今天为什么不参加化学实验课？","我有一个时间冲突的预约。"],
+  q263:["你能猜出我是从哪里听说这场研讨会的吗？","会不会是从一位以前的同学那里听说的？"],
+  q264:["你喜欢这次艺术展览吗？","我觉得这些艺术品没有吸引力。"]
+});
 
 const GRAMMAR_POINTS = {
 
@@ -16381,6 +16711,190 @@ const GRAMMAR_GUIDE = {
   participle_phrase: {code:"G10", title:"现在分词后置修饰", pdfTitle:"G10 doing 分词短语作后置定语", action:"把 doing 短语紧跟在它修饰的名词后，不要插入主谓骨架。"},
   adverbial_clause: {code:"G11", title:"时间状语从句", pdfTitle:"G11 before / after / when 状语从句", action:"先完成主句主谓宾，再把完整的时间从句整体挂到句首或句尾。"}
 };
+
+// 答题后显示的“深度解析”。它只读取题目内容，不写入学习记录，
+// 因此升级解析不会改变题号、复习排期、收藏或云端同步数据。
+const DEEP_EXPLANATION = {
+  neg_inf: {
+    formula:"主语 + do/does not + 动词原形 + 宾语 + to do",
+    main:"先锁定有限谓语：一般现在时否定不是只在动词前加 not，而是由 do/does 承担时态，后面的实义动词恢复原形。",
+    attach:"to do 不另起一个完整句子，它贴在前面的名词或动词结构后，补充说明“做什么/用来做什么”。",
+    reject:"把 not 放在实义动词后，或把 do 和 not 拆开，会破坏英语的否定助动词链；把多余主语塞进来则会出现两个主语。",
+    rule:"先圈出 do/does not，再找原形动词；最后才把 to do 补在它所说明的成分后面。"
+  },
+  rel_contact: {
+    formula:"先行词 + (that/which) + 从句主语 + 从句谓语 + 主句其余部分",
+    main:"先暂时拿掉定语从句，检查剩下的主句是否仍有完整的主语和谓语。能成立，说明中间那一段只是给名词加说明。",
+    attach:"定语从句回答的是“哪一个/什么样的名词”，所以必须紧贴被修饰名词。关系代词在从句中作宾语时可以省略，但从句的位置不能移动。",
+    reject:"不能看见两个都像动词的词块就随意排列：一个属于定语从句，一个属于主句。先给从句封口，再接主句谓语。",
+    rule:"找名词 → 问“哪一个” → 把修饰它的 S + V 紧贴在后面 → 封口后继续主句。"
+  },
+  rel_that_subject: {
+    formula:"先行词 + [that/who + 从句谓语...] + 主句谓语/表语",
+    main:"先把 that/who 从句用括号拿掉，找出主句的主语和真正谓语。主句成立后，再把定语从句放回它修饰的名词后。",
+    attach:"that/who 一方面连接先行词，另一方面直接充当从句主语，因此它后面马上接从句谓语，不能再重复一个主语。",
+    reject:"如果把从句移到主句谓语后，它就会离开先行词，读者不知道它修饰谁；如果把主句谓语塞进从句中，长主语也会被截断。",
+    rule:"先行词一出现就开从句；从句结束后再出现主句谓语。看到两个谓语，先问它们分别属于哪一层。"
+  },
+  nounclause: {
+    formula:"主句主语 + 主句谓语 + [that/if/why + 从句主语 + 从句谓语]",
+    main:"先找最外层的主语和谓语。主句动词后缺少“说了什么/知道什么/解释什么”，后面的完整句子整体来填这个宾语位置。",
+    attach:"这里的 that/if/why 不是修饰前面的名词，而是开启一个名词性从句。整个从句相当于一个名词，通常紧跟在需要宾语的动词后。",
+    reject:"嵌入式从句不是独立问句，所以内部保持陈述语序“从句主语 + 从句谓语”；不能因为看到 why/if 就把助动词移到主语前。",
+    rule:"先完成外层主句 → 找主句动词缺少的内容 → 放入完整从句；只有最外层问句才倒装。"
+  },
+  causative: {
+    formula:"make / have / let + 宾语 + 动词原形",
+    main:"先找到使役动词，再问“让谁/什么发生变化”。这个人或物先作宾语，随后用动词原形说明产生的动作或结果。",
+    attach:"宾语和后面的原形动词构成一个小结构：宾语是动作的执行者或状态承担者，两者不能被其他成分拆开。",
+    reject:"make/have/let 后不能按普通不定式习惯加 to；也不能先放动作再放执行这个动作的宾语。",
+    rule:"使役动词 → 谁/什么 → 做什么。三个位置按这个顺序逐个填写。"
+  },
+  participle_phrase: {
+    formula:"名词 + doing 分词短语 + 主句谓语/其他成分",
+    main:"先删去 doing 短语，找完整主句；再判断哪个名词正在进行 doing 所表示的动作。",
+    attach:"doing 短语相当于缩短的 which/that is doing 定语从句，因此通常紧贴在它说明的名词后。",
+    reject:"把 doing 短语插在主语和主句谓语之间却没有先封口，会让人误把分词当成主句谓语；放远了也会修饰错对象。",
+    rule:"问“是谁在 doing？”答案对应的名词就是挂接点。"
+  },
+  word_order_basic: {
+    formula:"主语 + 谓语 + 宾语/表语 + 地点 + 时间",
+    main:"先只排最小骨架，不急着放长修饰语：谁做什么，或谁是什么。有限谓语前后的位置由这个骨架决定。",
+    attach:"地点、时间、方式等信息通常在主干完成后再补；介词要和自己的宾语保持在一起。",
+    reject:"只按中文顺序或词块表面搭配会把状语塞进谓语和宾语之间。句子可能每个词都认识，但层级已经断开。",
+    rule:"先排 S-V-O/C，读通最短句；再从短到长把附加信息挂回去。"
+  },
+  reduced_relclause: {
+    formula:"名词 + 过去分词短语 (= 名词 + that/who is + 过去分词)",
+    main:"先把过去分词短语还原成完整定语从句，检查它描述的是哪个名词以及这个名词是否承受该动作。",
+    attach:"省略的是“关系代词 + be”，不是随便少词；留下的过去分词仍紧贴被修饰名词。",
+    reject:"再额外加入 that/who 却没有补 be，会得到不完整的从句；把分词当主句谓语又会让主句缺少时态。",
+    rule:"看到名词后面的过去分词，先在脑中补回 that/who + be，再判断位置。"
+  },
+  question_word_order: {
+    formula:"疑问词 + 助动词/be/情态动词 + 主语 + 动词原形/其余部分",
+    main:"先判断这是独立问句还是嵌入从句。独立问句需要让助动词、be 或情态动词站到主语前。",
+    attach:"疑问词放句首只是标出所问信息；后面仍要按问句规则安排助动词和主语。若疑问词本身作主语，则不再额外倒装。",
+    reject:"照搬陈述句顺序会失去问句标记；重复放助动词又会造成两个时态承担者。",
+    rule:"先问“疑问词是不是主语？”不是主语才执行：疑问词 + 助动词 + 主语。"
+  },
+  adverbial_clause: {
+    formula:"完整主句 + [before/after/when + 从句主语 + 从句谓语]",
+    main:"先分别找出主句和时间从句的主语、谓语。两边各自都是一个句子层级，不能共用或交换谓语。",
+    attach:"before/after/when 开启的整段只说明时间关系，通常整体放在主句前或主句后。",
+    reject:"把时间从句插进主句动词和宾语之间，会切断主句；把连词单独移动，也会使它无法管辖完整从句。",
+    rule:"先完成主句并画句号，再把句号改成连接点，整体接上时间从句。"
+  },
+  infinitive_complement: {
+    formula:"have/had to 或其他固定结构 + 动词原形 + 动词自己的宾语",
+    main:"先把 have/had to、be able to 等结构看成一个整体；to 后的动词用原形，然后再接这个动词需要的宾语。",
+    attach:"to 和后面的原形动词不能拆开；宾语属于后面的实义动词，不属于 to。",
+    reject:"把宾语放到原形动词前，或在 had to 中间插入成分，都会破坏固定结构。",
+    rule:"先锁住“功能词 + to + 原形”，再问这个原形动词后面需要什么。"
+  }
+};
+
+function escapeHTML(value){
+  return String(value == null ? "" : value)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/\"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+function segmentText(q, tag){
+  const seg = q.segments.find(s=>s.tag===tag);
+  return seg ? seg.t.trim().replace(/[.?!]+$/,"") : "";
+}
+
+function relativeAntecedent(q){
+  const idx = q.segments.findIndex(s=>s.tag==="relclause");
+  if(idx<0) return "从句前面的名词";
+  const prefix = q.segments.slice(0,idx).map(s=>s.t).join("").trim().replace(/[,:;]+$/,"");
+  const det = prefix.match(/\b(?:the|a|an|this|that|these|those|my|your|his|her|our|their|another|each|every)\s+[A-Za-z][A-Za-z'’-]*(?:\s+[A-Za-z][A-Za-z'’-]*){0,4}$/i);
+  if(det) return det[0];
+  const tail = prefix.match(/(?:^|\s)([A-Za-z][A-Za-z'’-]*(?:\s+[A-Za-z][A-Za-z'’-]*){0,2})$/);
+  return tail ? tail[1] : "从句前面的名词";
+}
+
+function mainWithoutTaggedClause(q, tag){
+  const clause = segmentText(q,tag);
+  if(!clause) return q.answer;
+  return q.answer.replace(clause,"").replace(/\s+([,.?!])/g,"$1").replace(/\s{2,}/g," ").trim();
+}
+
+function specificAttachmentExplanation(q){
+  if(q.weakTag==="rel_that_subject" || q.weakTag==="rel_contact"){
+    const antecedent = relativeAntecedent(q);
+    const clause = segmentText(q,"relclause") || "定语从句";
+    const main = mainWithoutTaggedClause(q,"relclause");
+    const itNote = /\bit\b/i.test(q.answer.slice(0,Math.max(0,q.answer.indexOf(clause))))
+      ? " 本句前面虽然有 it，但 it 是代词，已经承担自己的句子成分，不能作为限制性 that 从句的先行词；要看从句的意思具体描述哪一个名词。"
+      : "";
+    const role = q.weakTag==="rel_that_subject"
+      ? "这里的关系词在从句中作主语，所以后面直接接从句谓语。"
+      : "这里的关系词在从句中作宾语，因而可以省略；省略的只是关系词，不是从句位置。";
+    return {
+      main:`暂时拿掉「${clause}」，主句是「${main}」。这说明主句骨架本身完整。`,
+      attach:`从句「${clause}」回答“哪一个/什么样的 ${antecedent}”，所以它修饰的先行词是「${antecedent}」，必须紧跟在这个名词短语后。${role}${itNote}`,
+      reject:`不能把「${clause}」放到别的词后面：位置一变，语法上就会被理解为修饰离它最近的另一个词；语义也要检查——从句里描述的动作或状态必须能由「${antecedent}」承担。`
+    };
+  }
+  if(q.weakTag==="nounclause"){
+    const clause = segmentText(q,"nounclause");
+    if(clause){
+      const main = mainWithoutTaggedClause(q,"nounclause");
+      return {
+        main:`外层先看成「${main} + 某件事」。其中“某件事”正是后面的整个从句。`,
+        attach:`「${clause}」整体回答外层动词后的“什么/是否/为什么”，所以它是名词性从句，不是去修饰前面的某个名词。`,
+        reject:`从句内部要保留自己的“主语 + 谓语”。即使由 why/if 等疑问词引导，它被嵌入主句后也不使用独立问句倒装。`
+      };
+    }
+  }
+  if(q.weakTag==="adverbial_clause"){
+    const clause = segmentText(q,"advclause");
+    if(clause) return {attach:`「${clause}」是完整的时间状语从句，整体说明主句动作发生在什么时候，不修饰某一个名词。`};
+  }
+  return {};
+}
+
+function chunkComparisonHTML(q, correct){
+  const chosen = slotFill.map((s,i)=>`<span class="chunk-token ${correct || (s && s.text.trim().toLowerCase()===q.correct[i].trim().toLowerCase()) ? "" : "bad"}">${escapeHTML(s ? s.text : "空")}</span>`).join("");
+  const target = q.correct.map(t=>`<span class="chunk-token">${escapeHTML(t)}</span>`).join("");
+  return `<div class="chunk-compare">
+    ${!correct ? `<div class="chunk-row"><div class="chunk-row-label">你的顺序</div><div>${chosen}</div></div>` : ""}
+    <div class="chunk-row"><div class="chunk-row-label">正确顺序</div><div>${target}</div></div>
+  </div>`;
+}
+
+function deepExplanationHTML(q, correct){
+  const base = DEEP_EXPLANATION[q.weakTag] || DEEP_EXPLANATION.word_order_basic;
+  const specific = specificAttachmentExplanation(q);
+  const isClause = ["rel_that_subject","rel_contact","nounclause","adverbial_clause"].includes(q.weakTag);
+  const placementTitle = isClause ? "从句到底接在哪里？" : "后面的成分接在哪里？";
+  return `<div class="deep-explanation">
+    <div class="deep-title">逐层拆解｜不是背答案，而是找到每一块的位置</div>
+    ${chunkComparisonHTML(q,correct)}
+    <div class="deep-grid">
+      <div class="deep-step">
+        <div><span class="deep-step-num">1</span><span class="deep-step-title">先找主干</span></div>
+        <p>${specific.main || base.main}</p>
+        <div class="structure-formula">${base.formula}</div>
+      </div>
+      <div class="deep-step">
+        <div><span class="deep-step-num">2</span><span class="deep-step-title">${placementTitle}</span></div>
+        <p>${specific.attach || base.attach}</p>
+      </div>
+      <div class="deep-step">
+        <div><span class="deep-step-num">3</span><span class="deep-step-title">本题具体怎么拆</span></div>
+        <p>${q.explainZH}</p>
+      </div>
+      <div class="deep-step">
+        <div><span class="deep-step-num">4</span><span class="deep-step-title">为什么别的位置不行？</span></div>
+        <p class="deep-warning">${specific.reject || base.reject}</p>
+      </div>
+    </div>
+    <div class="deep-rule">下次做题动作：${base.rule}</div>
+  </div>`;
+}
 
 // GitHub 部署后，只需要替换下面两项。Publishable key 可以放在浏览器；绝不要填 secret/service_role key。
 const CLOUD_CONFIG = {
@@ -17091,10 +17605,10 @@ function doSubmit(q){
         <div class="translation-row"><span class="translation-label">题目中文翻译</span>${translations[0]}</div>
         <div class="translation-row"><span class="translation-label">正确答案中文翻译</span>${translations[1]}</div>
       </div>
+      ${deepExplanationHTML(q,correct)}
       <div class="explain">
-        <span class="label">${correct ? "语法回顾 Grammar recap" : "错在哪 · Why this was wrong"}</span>
+        <span class="label">英文语法说明 · English grammar note</span>
         ${q.explainEN}
-        <div class="zh">${q.explainZH}</div>
       </div>
       ${diagnosticHTML}
       <div class="action-row">
