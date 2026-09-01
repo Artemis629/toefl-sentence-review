@@ -90,7 +90,8 @@
     background:var(--paper-raised); border:1px solid var(--line); border-radius:14px;
     padding:26px 28px; box-shadow:var(--shadow); margin-bottom:22px;
   }
-  .card-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;}
+  .card-head{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;}
+  .card-head-actions{display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap;}
   .qnum{font-size:12px; letter-spacing:.08em; color:var(--clay); font-weight:700; text-transform:uppercase;}
   .tag-pill{font-size:11px; background:var(--teal-mist); color:var(--teal-deep); padding:4px 10px; border-radius:100px; font-weight:600;}
   .instr{
@@ -171,6 +172,16 @@
 
   .answer-block{margin-top:18px; border-top:1px dashed var(--line); padding-top:16px;}
   .answer-sentence{font-size:19px; line-height:1.7; margin-bottom:12px;}
+  .translation-block{
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;
+    background:var(--teal-mist); border:1px solid #cfe3de; border-radius:10px;
+    padding:12px 15px; margin:10px 0 14px; color:var(--ink); font-size:13.5px; line-height:1.7;
+  }
+  .translation-row + .translation-row{margin-top:7px; padding-top:7px; border-top:1px dashed #bfd7d1;}
+  .translation-label{
+    display:inline-block; min-width:104px; margin-right:8px; color:var(--teal-deep);
+    font-size:11px; font-weight:800; letter-spacing:.03em;
+  }
   .seg-plain{}
   .seg-neg{color:var(--error); font-weight:600; border-bottom:2px solid var(--error); padding-bottom:1px;}
   .seg-inf{color:var(--clay); font-weight:600; border-bottom:2px dotted var(--clay); padding-bottom:1px;}
@@ -334,6 +345,23 @@
     border:none; border-radius:100px; padding:6px 12px; cursor:pointer; white-space:nowrap;
   }
   .qlist-go:hover{background:var(--teal-deep);}
+  .favorite-btn{
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;
+    font-size:11.5px; font-weight:700; color:var(--clay); background:#fff;
+    border:1px solid #dfc6a5; border-radius:100px; padding:6px 11px; cursor:pointer; white-space:nowrap;
+  }
+  .favorite-btn:hover{background:var(--clay-mist);}
+  .favorite-btn.active{background:var(--clay); color:#fff; border-color:var(--clay);}
+  .favorite-note{
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;
+    background:var(--clay-mist); color:var(--clay); border:1px solid #e5cfb3;
+    border-radius:10px; padding:11px 14px; margin-bottom:14px; font-size:12.5px; line-height:1.6;
+  }
+  .favorite-empty{
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;
+    text-align:center; color:var(--ink-soft); background:var(--paper-raised);
+    border:1px solid var(--line); border-radius:12px; padding:42px 20px;
+  }
   .all-toolbar{
     display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px;
     font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;
@@ -360,6 +388,14 @@
   .status-due{background:var(--error-mist); color:var(--error);}
   .status-scheduled{background:var(--teal-mist); color:var(--teal-deep);}
   .status-new{background:var(--clay-mist); color:var(--clay);}
+  .status-favorite{background:var(--clay-mist); color:var(--clay);}
+
+  @media(max-width:640px){
+    .card-head{align-items:flex-start;}
+    .card-head-actions{max-width:58%;}
+    .qlist-row{align-items:flex-start; padding:13px 14px;}
+    .qlist-num{width:58px;}
+  }
 
   footer{
     text-align:center; font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;
@@ -391,6 +427,7 @@
 
 <nav class="body-font">
   <button class="tab-btn active" data-view="review">复习 Review</button>
+  <button class="tab-btn" data-view="favorites">收藏库 Favorites <span id="favorite-tab-count">0</span></button>
   <button class="tab-btn" data-view="weak">薄弱点分析 Weak Points</button>
   <button class="tab-btn" data-view="method">专项方法 Method</button>
   <button class="tab-btn" data-view="all">全部题目 All</button>
@@ -405,6 +442,7 @@
       <div class="stat"><div class="num" id="stat-total">0</div><div class="lbl">题库总数</div></div>
       <div class="stat"><div class="num" id="stat-graduated">0</div><div class="lbl">已掌握（退出每日复习）</div></div>
       <div class="stat"><div class="num" id="stat-newquota">0/10</div><div class="lbl">今日新题 · 已做/已开放</div></div>
+      <div class="stat"><div class="num" id="stat-favorites">0</div><div class="lbl">已收藏（不进入普通复习）</div></div>
     </div>
     <div id="review-slot"></div>
   </div>
@@ -482,6 +520,15 @@
     </div>
     <div class="all-count" id="all-count"></div>
     <div id="all-list"></div>
+  </div>
+
+  <div class="view" id="view-favorites">
+    <div class="favorite-note">收藏题会完整保留原来的做题次数、答错次数和复习日期，但不会进入普通复习队列。你仍可在这里单独练习；取消收藏后，它会按照原来的进度重新参加复习。</div>
+    <div class="all-toolbar">
+      <input class="all-search" id="favorite-search" type="text" placeholder="搜索收藏题的题干、答案或语法类型…">
+    </div>
+    <div class="all-count" id="favorite-count"></div>
+    <div id="favorite-list"></div>
   </div>
 
 </main>
@@ -15996,6 +16043,260 @@ const QUESTIONS = [
   }
 ];
 
+// Chinese translations are keyed by the stable question ID, so they do not affect progress data.
+// [0] = Speaker A / prompt translation; [1] = correct answer translation.
+const QUESTION_TRANSLATIONS = {};
+Object.assign(QUESTION_TRANSLATIONS, {
+  q1:["今晚你要去参加班级聚餐吗？","抱歉，我没有时间参加。"],
+  q2:["你昨天为什么没来参加文学研讨会？","我收到的邮件上写错了时间。"],
+  q3:["你为什么喜欢去那座校外公园慢跑？","拥有最好跑道的那座公园是我最喜欢的。"],
+  q4:["你从哪里得到那个信息的？","我们的教授提到，那个网站上有全部详细信息。"],
+  q5:["你为什么选择那所大学？","我的老师推荐了最可能令我感兴趣的那所学校。"],
+  q6:["你希望新笔记本电脑具备什么特点？","电池续航时间最长的那款是我的首选。"],
+  q7:["你上课为什么迟到了那么久？","我遇上了持续一个小时的交通堵塞。"],
+  q8:["你昨天为什么没参加行进乐队排练？","我另有一个无法改期的预约。"],
+  q9:["你喜欢自己买的那本新书吗？","喜欢，它就是去年获奖的那一本。"],
+  q10:["你能推荐一个化学课学习小组吗？","每周四下午聚会的那个小组非常有帮助。"],
+  q11:["你今天早上为什么坐公交车去学校？","我平常开的那辆车现在正在维修店。"],
+  q12:["你为什么没接电话？","我当时在上一节拖堂的课。"],
+  q13:["你觉得新图书馆怎么样？","图书馆最近的翻修改造让它看起来非常气派。"],
+  q14:["你更喜欢哪家健身房？","拥有新设备的校内健身房是我最喜欢的健身房。"],
+  q15:["你为什么还没完成作业？","我需要用来参考的那本书仍然被别人借着。"],
+  q16:["关于数字营销的研讨会确实很有启发。","你知道之后是否还会有后续场次吗？"],
+  q17:["你打算买哪台笔记本电脑？","处理器最快的那一款会非常适合我的需求。"],
+  q18:["你为什么投票支持那位候选人？","承诺改善教育的那一位看起来最可靠。"],
+  q19:["你为什么搬进了新的宿舍？","我原来住的那一间存在维修问题。"],
+  q20:["你晚些时候有空接电话吗？","没有，我一整天的课程都排满了。"],
+  q21:["你为什么看起来心事重重？","我有很多学校任务的截止日期快到了。"],
+  q22:["社团指导老师在会议期间说了什么？","他解释了为什么正在实施这项新政策。"],
+  q23:["你昨天为什么没给我打电话？","我当时在图书馆复习微积分考试。"],
+  q24:["你打算参加学校的有氧健身课吗？","不，我更喜欢目前的锻炼安排。"],
+  q25:["你上的是哪所大学？","就是那所以工程专业闻名的大学。"],
+  q26:["你这学期在上哪门课？","我正在上一门讲授高级统计方法的课程。"],
+  q27:["你为什么不来参加班级野餐？","我已经有一个无法推掉的安排。"],
+  q28:["我打算这学期选一门摄影课。","这门课会讲哪些主题？"],
+  q29:["你昨天为什么没参加生物学讲座？","我有一个不能缺席的家庭聚会。"],
+  q30:["我昨天在图书馆看到你了。","我必须完成经济学作业。"],
+  q31:["Jee-Wha 下课后问了你什么？","她想弄清楚 Konrad 要搬去哪个城市。"],
+  q32:["你参加新生说明会为什么迟到了？","高速公路上交通非常拥堵。"],
+  q33:["你在哪里买的上课用品？","我在学校书店买的。"],
+  q34:["你读完我借给你的那本书了吗？","抱歉，我还没有机会开始读。"],
+  q35:["我错过了昨天的讲座。","有人把它录下来了吗？"],
+  q36:["你在哪里学的钢琴？","我在校内的那所音乐学校上过课。"],
+  q37:["她为什么又复习了一遍笔记？","她检查了笔记，以避免小错误。"],
+  q38:["你昨天为什么没参加户外社团会议？","我收到了那封通知会议已取消的邮件。"],
+  q39:["你从哪里得到那个信息的？","我是在上周发表的那篇研究论文里读到的。"],
+  q40:["依你看，什么决定了长期的成功？","重要的是始终保持持续的努力。"],
+  q41:["我上周末本来想参观艺术系的新展览。","你碰巧去看了吗？"],
+  q42:["你为什么没去上早上的课？","我在同一时间预约了医生。"],
+  q43:["你最喜欢去哪里徒步？","我最喜欢的是学校附近的那条步行道。"],
+  q44:["你今天为什么不参加研讨会？","他们讨论的主题与我的研究无关。"],
+  q45:["你喜欢学生电影节吗？","那些电影没有一部令我感兴趣。"],
+  q46:["我在哪里可以买到大学橄榄球赛的门票？","你在他们的网站上查看过是否还有票吗？"],
+  q47:["明天礼堂里有一场招聘会。","它会在上午还是下午开始？"],
+  q48:["我正在申请一份校内兼职。","你把简历发给他们了吗？"],
+  q49:["你觉得课堂出勤政策的修改怎么样？","他们所做的更新相当出人意料。"],
+  q50:["你开始做小组项目了吗？","我还没抽出时间开始做这个项目。"],
+  q51:["谁会和我们一起参加商业社团会议？","我那位主修市场营销的同学会参加。"],
+  q52:["你为什么没接电话？","我当时在上一节拖堂的课。"],
+  q53:["今天早上项目进展汇报后，经理对你说了什么？","他想知道我们最担心的问题是什么。"],
+  q54:["招聘经理问了很多不错的问题。","他有没有问你为什么选择这个特定职业？"],
+  q55:["我刚买到这周末那部新戏的门票。","剧院几点开门？"],
+  q56:["你在图书馆找到自己要找的那本书了吗？","别人已经把它借走了，所以当时借不到。"],
+  q57:["你今天去图书馆了吗？","很遗憾，我没有时间去。"],
+  q58:["学校举办的气候变化会议内容非常丰富。","你知道主题演讲之后会不会在网上发布吗？"],
+  q59:["我刚买了一辆新自行车，准备早上骑去上课。","骑起来舒服吗？"],
+  q60:["你在烹饪课上用的食谱是从哪里找到的？","我妈妈送我的那本食谱里有这个配方。"],
+  q61:["我刚报名参加摄影工作坊。","这是你第一次参加这种工作坊吗？"],
+  q62:["特邀演讲者在讲座中讨论了什么？","她解释了新兴技术将如何塑造各行业的未来。"],
+  q63:["我看到了一则关于新技术研讨会的通知。","你知道它会不会进行网络直播吗？"],
+  q64:["你为什么更喜欢校内健身房？","我更喜欢提供多种课程的健身房。"],
+  q65:["你决定好下个月学校会议期间住哪家酒店了吗？","提供免费早餐的那家是一个很好的选择。"],
+  q66:["我需要在提交论文前修改一下。","你查看过教授提供的要求了吗？"],
+  q67:["完成这个项目需要多长时间？","教授需要知道这会花多长时间吗？"],
+  q68:["你和 Sarah 下课后在谈什么？","她想知道全班可以去哪里吃午饭。"],
+  q69:["你下课后为什么没给我回电话？","我的手机没电了，而且我找不到充电器。"],
+  q70:["你的演讲选好主题了吗？","我选了一个以可再生能源和可持续未来为重点的主题。"],
+  q71:["哪里最适合买新鲜农产品？","校园礼堂附近的市场有最新鲜的农产品。"],
+  q72:["下周我应该参加哪场研讨会？","我对那场专注于高级研究方法的研讨会感兴趣。"],
+  q73:["教练对即将举行的校级锦标赛说了什么？","他强调了本周进行严格训练有多么重要。"],
+  q74:["他写哪类书？","他主要创作探讨人际关系的小说。"],
+  q75:["校园书店在哪里？","你是在找步行就能到的地方吗？"],
+  q76:["黄教授询问了我们小组项目的什么情况？","她问我们是否已经决定由哪位组员进行演讲。"],
+  q77:["一位同学询问作业的情况。","作业说明现在已经发布在网上了。"],
+  q78:["你解决那个问题了吗？","我无法确定正确的解决方案。"],
+  q79:["你为什么归还了那本书？","我还没来得及读完，就必须把它还给图书馆。"],
+  q80:["你的辅导老师说了什么？","辅导老师推荐的那种方法似乎最适合我。"]
+});
+Object.assign(QUESTION_TRANSLATIONS, {
+  q81:["你推荐哪家咖啡馆？","办公楼旁边的那家咖啡馆有最好喝的咖啡。"],
+  q82:["我很期待下周学校的读书会。","这个月选读的是哪本书？"],
+  q83:["你最喜欢哪位同学？","我无法决定自己最喜欢谁。"],
+  q84:["你为什么没接电话？","我当时在上课，没法接电话。"],
+  q85:["你看过教授的评语了吗？","抱歉，我还没有时间查看。"],
+  q86:["实地考察安排在什么时候？","安排的那些日期和我的其他事务有冲突。"],
+  q87:["我真的很喜欢昨天的工作坊。","你能告诉我之后是否还安排了类似的场次吗？"],
+  q88:["Emily 昨天为什么联系书店？","她说自己必须弄清楚课本为什么延迟到货。"],
+  q89:["这周还有校内工作在接受申请吗？","昨天发布的那些职位只面向一年级学生。"],
+  q90:["你知道我应该坐哪路公交车去市图书馆吗？","我建议乘坐会在学生中心附近停靠的那条线路。"],
+  q91:["你知道我可以在校内哪里打印研究海报吗？","图书馆旁边的打印店营业到十点。"],
+  q92:["你按时完成作业了吗？","我没能在截止日期前完成。"],
+  q93:["你在哪里找到这份课程学习指南的？","我是在学校的资源平台上找到的。"],
+  q94:["你有空帮我做这份家庭作业吗？","没有，我现在正忙于很多其他工作。"],
+  q95:["你打算给宿舍买一张新沙发吗？","不，我打算等到下次促销时再决定。"],
+  q96:["我很喜欢自己为微积分课买的计算器。","你在哪里买的？我可能也需要一个。"],
+  q97:["你打算参加下个月的英语学习会议吗？","我从来没有对这类活动感兴趣过。"],
+  q98:["你为什么没参加研讨会？","我的生物学导论课比预想中结束得晚。"],
+  q99:["你为什么选择在课堂上播放这部电影？","这部电影获得过多个奖项，而且看起来很有趣。"],
+  q100:["你读完指定的章节了吗？","我没有足够的时间把它们全部读完。"],
+  q101:["你为什么没参加研讨会？","原定今天举行的研讨会与我的其他事务发生了冲突。"],
+  q102:["你在哪里找到演讲中使用的那篇文章？","我是在图书馆里的那本杂志上读到的。"],
+  q103:["学校周边哪里最适合吃饭？","你能告诉我你在找哪一类餐厅吗？"],
+  q104:["你为什么决定申请那家公司的实习？","我选择它，是因为那家公司提供最好的职业发展机会。"],
+  q105:["你打算什么时候出发去社团展会？","我还在考虑什么时间最合适。"],
+  q106:["教授怎样回应你的研究计划？","他要求提供更多有关这项研究将如何实施的细节。"],
+  q107:["你为什么选择上高级课程？","我想看看自己在学业上能接受多大的挑战。"],
+  q108:["你觉得昨晚的学生独奏会怎么样？","没有什么令人兴奋的地方。"],
+  q109:["你觉得把星期二的文学讨论课安排在室外怎么样？","你知道到时候的天气预报是否良好吗？"],
+  q110:["学生现在可以在网上预约疫苗接种门诊。","你可以说明一下怎样签到吗？"],
+  q111:["你找学生实习的进展怎么样？","我非常想要的办公室助理职位已经招满了。"],
+  q112:["下学期我想搬到一个能让我在宿舍里不受干扰地学习的地方。","我听说离图书馆最近的那栋宿舍楼最安静。"],
+  q113:["你从哪里得到这本书的？","你查过图书馆有没有这本书吗？"],
+  q114:["明天由谁主持工作坊？","我听说组织者正在考虑应该由谁负责。"],
+  q115:["你的朋友询问一门改期课程的情况。","我们的课程见面时间已经重新安排了。"],
+  q116:["你询问论文中心论点的情况。","你想表达的主要观点是什么？"],
+  q117:["你们讨论会议安排。","会议在星期五一早开始。"],
+  q118:["一位朋友询问搭车的事。","下课后我可以开车送你。"],
+  q119:["你的一个项目需要帮助。","请在今晚把草稿发过来。"],
+  q120:["你描述一场社团活动。","辩论锦标赛在星期四举行。"],
+  q121:["你在哪里买到宿舍里的那张漂亮沙发？","我是在一家专营复古物品的商店买的。"],
+  q122:["食堂今天为什么关门？","校方公告提到，他们正在调查是什么造成了这个问题。"],
+  q123:["你喜欢校园里新开的那家咖啡店吗？","那里的氛围没有我希望的那么吸引人。"],
+  q124:["你明天去上课吗？","不去，我要和朋友们去海滩。"],
+  q125:["你完成小组项目中自己负责的部分了吗？","还没有，我仍在做分配给我的部分。"],
+  q126:["今晚谁会来参加宿舍里的聚会？","我不知道那些客人都是谁。"],
+  q127:["你收到我发的那封关于课程的邮件了吗？","没有，我在收件箱里没看到。"],
+  q128:["你读了最新一期校刊里的那篇文章吗？","没有，我还没有时间读。"],
+  q129:["你昨天参加学校的社交活动了吗？","我没能赶去参加那场活动。"],
+  q130:["今天校园博物馆将开办一场临时艺术展。","你知道它会展出多少周吗？"],
+  q131:["你开始做小组项目了吗？","我还没抽出时间开始做自己负责的任务。"],
+  q132:["我在考虑下学期选一门生物学课程。","你决定想选哪一门生物学课程了吗？"],
+  q133:["你为什么选那门课？","这门课讲授高级编程技术，而且很受推荐。"],
+  q134:["你昨天为什么没去学校的任何一家图书馆？","本应开放的那家图书馆因翻修而关闭了。"],
+  q135:["你会参加英语系星期四的工作坊吗？","不会，那个时间我另有安排。"],
+  q136:["你为什么还没读那本书？","我改为读了同一位作者写的另一本书。"],
+  q137:["校园里哪里最适合学习？","那家全天二十四小时开放的图书馆最方便。"],
+  q138:["大学艺术系正在赞助博物馆的一场新展览。","你知道它是否展出当代艺术家的作品吗？"],
+  q139:["你为什么喜欢那本书？","探讨人类心理的书极其有趣。"],
+  q140:["会议组织者下课后问了你什么？","她在问主题演讲嘉宾都有谁。"],
+  q141:["你上周为什么没参加研讨会？","原定上周举行的研讨会与我的其他事务发生了冲突。"],
+  q142:["你是怎样修好电脑的？","我按照一个逐步说明操作过程的教程做了。"],
+  q143:["你成功为所有人买到学校音乐会的门票了吗？","我访问网站时已经没有票了。"],
+  q144:["我不得不错过星期一的小组讨论。","你后来补上了讨论的内容吗？"],
+  q145:["我报名参加了这学期的舞蹈课。","你会学习哪一种舞蹈？"],
+  q146:["这个周末我需要修理学校配发的笔记本电脑。","你会把它送去哪里修？"],
+  q147:["你喜欢那场现代艺术讲座吗？","我觉得所有主题都不有趣。"],
+  q148:["我打算参加下周的招聘会。","你打印好几份简历了吗？"],
+  q149:["你在复习课的讲堂里看到人了吗？","我到达时那里一个人也没有。"],
+  q150:["我正在组织下个月的学校慈善活动。","届时会有哪些募款活动？"],
+  q151:["学校将为学生社团实施一些新政策。","我们社团很想弄清楚哪些变化将很快生效。"],
+  q152:["你为什么没参加线上课程？","我的电脑出现了技术问题。"],
+  q153:["我在哪里可以找到图书馆的期刊区？","你的研究项目需要一个资料来源吗？"],
+  q154:["食堂今天早餐提供了哪种冰沙？","就是配有新鲜浆果的那一种。"],
+  q155:["你从哪里得到这个信息的？","我为课程阅读的那篇文章包含所有详细信息。"],
+  q156:["你在图书馆找到自己要找的那本书了吗？","别人已经把它借走了，所以当时借不到。"],
+  q157:["你在哪里找到课程作业的说明？","教授发给我们的课程大纲里包含这些说明。"],
+  q158:["谁负责心理学课程的小组项目？","我不确定由谁带领。"],
+  q159:["我刚买到这周末那部新戏的门票。","剧院几点开门？"],
+  q160:["我正在为一些计算机科学专业的学生筹办聚会。","你还邀请了谁？"]
+});
+Object.assign(QUESTION_TRANSLATIONS, {
+  q161:["你为什么喜欢那本书？","探讨人类心理的书极其有趣。"],
+  q162:["我刚买到这周末那部新戏的门票。","剧院几点开门？"],
+  q163:["你请了谁来帮助策划活动？","我原本打算问问 Sam 有没有时间帮忙。"],
+  q164:["你为什么没有申请奖学金？","我不确定自己是否符合申请条件。"],
+  q165:["你喜欢昨晚一年一度的学校聚餐吗？","那些食物不合我的口味。"],
+  q166:["我正在考虑申请下学期的研究助理工作。","需要具备哪些最低资格？"],
+  q167:["我怎样才能报名参加即将举行的国际象棋比赛？","国际象棋社团张贴在校园各处的海报说明了如何报名。"],
+  q168:["会议为什么推迟了？","没有人提前预订会议室。"],
+  q169:["你知道会议会持续多久吗？","我不确定它按安排应该什么时候结束。"],
+  q170:["心理学实验室开始招聘实验室助理了吗？","我在那里工作的朋友告诉我，已经有二十多人申请了。"],
+  q171:["哪个校园团体能帮助我提高公开演讲能力？","我会试试那个在学生中心聚会的辩论社。"],
+  q172:["你昨天的演讲令人印象深刻。","谢谢。你想让我发一份给你吗？"],
+  q173:["真希望我没有错过上周的会议。","你知道去哪里可以找到各场会议的录像吗？"],
+  q174:["我们昨天在国家公园玩得非常开心。","有人知道它是否全年开放吗？"],
+  q175:["平面设计工作坊非常有帮助。","你能告诉我每一场工作坊持续了多久吗？"],
+  q176:["博物馆的新艺术展令人惊艳。","你是否碰巧知道我怎样能获得展览信息？"],
+  q177:["我真的很喜欢我们昨天看的纪录片。","你听说过有关他们如何拍摄的任何细节吗？"],
+  q178:["你在图书馆找到自己要找的那本书了吗？","别人已经把它借走了，所以当时借不到。"],
+  q179:["明天谁主持机器人社团会议？","我不知道由谁负责。"],
+  q180:["你为什么买那个品牌的笔记本电脑？","顾客评分最高的那款看起来是最佳选择。"],
+  q181:["我的课本在哪里？","课本就在你昨晚放下它的地方。"],
+  q182:["你从哪里得到这个信息的？","我为课程阅读的那篇文章包含所有详细信息。"],
+  q183:["Eve 对昨晚的演出有什么问题吗？","她想知道演出是在哪里举行的。"],
+  q184:["博物馆工作人员刚才问了你什么？","她想知道我是否觉得这个展览很有启发。"],
+  q185:["你明天会参加会议吗？","由于之前已有安排，我无法参加。"],
+  q186:["你的经理问了你什么？","他需要记录我申请远程办公的原因。"],
+  q187:["你昨天参加研讨会了吗？","由于之前另有安排，我没能参加。"],
+  q188:["你明晚去听音乐会吗？","我还没有这场活动的门票。"],
+  q189:["Williams 对这个项目说了什么？","他不知道项目按安排应该什么时候开始。"],
+  q190:["你喜欢学生电影节吗？","那些电影没有一部令我感兴趣。"],
+  q191:["Matthew 很喜欢你推荐给他的那本书。","他告诉你，他最喜欢的部分是什么？"],
+  q192:["你今天要去健身房吗？","我周末不去健身房。"],
+  q193:["你在哪里找到这把椅子的？","我是在当地大型商场家具区的后面找到的。"],
+  q194:["你为什么决定申请那家公司的实习？","我选择它，是因为那家公司提供最好的职业发展机会。"],
+  q195:["你为什么选择读那本书？","那就是我的英语教授推荐的那一本。"],
+  q196:["你打算什么时候出发去社团展会？","我还在考虑什么时间最合适。"],
+  q197:["谁会和我们一起参加商业社团会议？","我那位市场营销专业的同学会参加。"],
+  q198:["你为什么选择那门科学课程？","这门课由一位该领域的专家教授。"],
+  q199:["你为什么不参加辩论？","他们选择的主题不能引起我的兴趣。"],
+  q200:["你是怎样修好电脑的？","我按照一个逐步说明操作过程的教程做了。"],
+  q201:["关于气候变化的演讲内容非常丰富。","你知道之后是否能在网上查看吗？"],
+  q202:["你在哪里买的上课用品？","你想知道他们是否提供学生折扣吗？"],
+  q203:["你在图书馆找到自己要找的那本书了吗？","别人已经把它借走了，所以当时借不到。"],
+  q204:["今天校园博物馆将开办一场临时艺术展。","你知道它会展出多少周吗？"],
+  q205:["我刚读完一本为课程安排的精彩书籍。","我在哪里可以买一本自己的？"],
+  q206:["我学习法语已经有几个月了。","你怎样练习说法语？"],
+  q207:["什么问题延误了最终决定？","这个问题涉及该计划是否可行。"],
+  q208:["为什么许多学生反对改变食堂菜单？","他们认为菜单的种类有限。"],
+  q209:["你最喜欢哪座公园？","拥有最好跑道的那座公园是我最喜欢的。"],
+  q210:["你最喜欢去哪里徒步？","位于学校附近的那条步行道是我最喜欢的。"],
+  q211:["我刚买到这周末那部新戏的门票。","剧院几点开门？"],
+  q212:["你完成问卷了吗？","我还没有收到问卷链接。"],
+  q213:["你看到昨晚校园广场上的烟花表演了吗？","那些炸成心形的烟花是我最喜欢的。"],
+  q214:["你觉得新图书馆怎么样？","图书馆最近的翻修改造让它看起来非常气派。"],
+  q215:["你今天早上为什么坐公交车去学校？","我平常开的那辆车现在正在维修店。"],
+  q216:["你为什么还没有加入大学体育社团？","我参加的活动已经太多了。"],
+  q217:["你和院长讨论了什么？","她问我对改进课程设置是否有建议。"],
+  q218:["你最近为什么没怎么看书？","我有没有告诉过你，我为什么再也没有时间阅读？"],
+  q219:["今晚你要去参加班级聚餐吗？","抱歉，我没有时间参加。"],
+  q220:["你正在学习哪种编程语言？","就是目前需求量最大的那一种。"],
+  q221:["你为什么还没有加入大学体育社团？","我参加的活动已经太多了。"],
+  q222:["你听说新的招生政策变化了吗？","没有，但我听说网站上对此作了解释。"],
+  q223:["我在考虑下学期搬到校外住。","你找到自己喜欢的住处了吗？"],
+  q224:["我已经决定在大学学习绘画。","你需要的用品都准备好了吗？"],
+  q225:["图书馆今天几点关门？","图书馆星期日晚上八点关门。"],
+  q226:["你认为这个项目会成功吗？","我不认为它能达到预期结果。"],
+  q227:["你为什么选择那所大学？","我的老师认为那所学校最能引起我的兴趣。"],
+  q228:["你星期二为什么没参加生物学工作坊？","原定举行的工作坊被取消了。"],
+  q229:["你为什么喜欢去那座校外公园慢跑？","拥有最好跑道的那座公园是我最喜欢的。"],
+  q230:["你为什么喜欢这种学习方法？","辅导老师推荐的那种方法似乎最适合我。"],
+  q231:["校外哪里最适合买咖啡？","办公楼旁边的那家咖啡馆有最好喝的咖啡。"],
+  q232:["今晚你要去参加班级聚餐吗？","抱歉，我没有时间参加。"],
+  q233:["你昨天为什么没去上课？","我必须赶上一个紧急的工作截止日期。"],
+  q234:["课程几点开始？","我参加的上午场在十点开始。"],
+  q235:["我和室友准备重新布置宿舍房间。","你们计划做哪些改变？"],
+  q236:["你看了这部剧的最新一集吗？","没有，因为一节很晚结束的课，我错过了。"],
+  q237:["你昨天为什么没去上课？","我必须赶上一个紧急的工作截止日期。"],
+  q238:["课程几点开始？","我参加的上午场在十点开始。"],
+  q239:["谁准备了演讲？","我不确定是谁做的。"],
+  q240:["看起来学校的师生停车场已经满了。","你知道附近还有空闲停车位吗？"],
+  q241:["你开会为什么迟到了？","我在去学校的路上遇到了堵车。"],
+  q242:["你在课堂上提到的那篇文章是谁写的？","我不确定作者是谁。"],
+  q243:["我报名了下周的绘画课。","你知道我需要带什么材料吗？"],
+  q244:["你最喜欢去哪里放松？","校园附近的那座公园是我最喜欢的地方。"]
+});
+
 const GRAMMAR_POINTS = {
 
   neg_inf: {
@@ -16090,6 +16391,7 @@ const CLOUD_CONFIG = {
 const STORAGE_KEY = "sentence_review_data_v1";
 const TAGSTAT_KEY = "sentence_review_tagstats_v1";
 const NEWQUOTA_KEY = "sentence_review_newquota_v1";
+const FAVORITES_KEY = "sentence_review_favorites_v1";
 const MINUTE = 60*1000;
 const HOUR = 60*MINUTE;
 const DAY = 24*HOUR;
@@ -16160,6 +16462,40 @@ function saveTagStats(d){
   scheduleCloudPush();
 }
 
+function normalizeFavoriteRecord(value){
+  if(value && typeof value === "object"){
+    return {active: !!value.active, updatedAt: Number(value.updatedAt || 0)};
+  }
+  return {active: !!value, updatedAt: 0};
+}
+function loadFavorites(){
+  try{
+    const raw = localStorage.getItem(FAVORITES_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  }catch(e){ return {}; }
+}
+function saveFavorites(favorites){
+  try{ localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites || {})); }catch(e){}
+  scheduleCloudPush();
+}
+function isFavorite(qid, favorites){
+  const all = favorites || loadFavorites();
+  return !!normalizeFavoriteRecord(all[qid]).active;
+}
+function favoriteCount(favorites){
+  const all = favorites || loadFavorites();
+  return QUESTIONS.reduce((n, q)=>n + (isFavorite(q.id, all) ? 1 : 0), 0);
+}
+function toggleFavorite(qid){
+  const favorites = loadFavorites();
+  const nextActive = !isFavorite(qid, favorites);
+  favorites[qid] = {active: nextActive, updatedAt: Date.now()};
+  saveFavorites(favorites);
+  refreshFavoriteDisplays();
+  return nextActive;
+}
+
 function cloudIsConfigured(){
   const url = CLOUD_CONFIG.supabaseUrl || "";
   const key = CLOUD_CONFIG.supabasePublishableKey || "";
@@ -16189,10 +16525,11 @@ function updateCloudControls(){
 
 function localPayload(){
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     data: loadData(),
     tagStats: loadTagStats(),
     newQuota: loadNewQuota(),
+    favorites: loadFavorites(),
     savedAt: Date.now()
   };
 }
@@ -16252,7 +16589,28 @@ function mergePayloads(local, remote){
       limit: Number(localQuota.limit || NEW_GROUP_SIZE)
     };
   }
-  return {schemaVersion:2, data:mergedData, tagStats:mergedTags, newQuota:mergedQuota, savedAt:Date.now()};
+
+  const mergedFavorites = {};
+  const localFavorites = l.favorites || {};
+  const remoteFavorites = r.favorites || {};
+  new Set([...Object.keys(localFavorites), ...Object.keys(remoteFavorites)]).forEach(qid=>{
+    const localRecord = normalizeFavoriteRecord(localFavorites[qid]);
+    const remoteRecord = normalizeFavoriteRecord(remoteFavorites[qid]);
+    if(remoteRecord.updatedAt > localRecord.updatedAt) mergedFavorites[qid] = remoteRecord;
+    else if(localRecord.updatedAt > remoteRecord.updatedAt) mergedFavorites[qid] = localRecord;
+    else mergedFavorites[qid] = {active: localRecord.active || remoteRecord.active, updatedAt: localRecord.updatedAt};
+  });
+
+  return {
+    ...r,
+    ...l,
+    schemaVersion:3,
+    data:mergedData,
+    tagStats:mergedTags,
+    newQuota:mergedQuota,
+    favorites:mergedFavorites,
+    savedAt:Date.now()
+  };
 }
 
 function applyPayloadLocally(payload){
@@ -16261,6 +16619,7 @@ function applyPayloadLocally(payload){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.data || {}));
     localStorage.setItem(TAGSTAT_KEY, JSON.stringify(payload.tagStats || {}));
     localStorage.setItem(NEWQUOTA_KEY, JSON.stringify(payload.newQuota || {date:todayStr(), count:0, limit:NEW_GROUP_SIZE}));
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(payload.favorites || {}));
   } finally {
     cloudApplyInProgress = false;
   }
@@ -16298,6 +16657,7 @@ function refreshAfterCloudMerge(){
   else renderStats();
   if(document.getElementById("view-weak").classList.contains("active")) renderWeak();
   if(document.getElementById("view-all").classList.contains("active")) renderAllList();
+  if(document.getElementById("view-favorites").classList.contains("active")) renderFavorites();
 }
 
 async function syncCloudProgress(){
@@ -16482,27 +16842,31 @@ let submitted = false;
 
 function buildQueue(){
   const data = loadData();
+  const favorites = loadFavorites();
   const now = Date.now();
   // due items that have been attempted before (review queue) — never rate-limited
   const reviewItems = QUESTIONS.filter(q => {
+    if(isFavorite(q.id, favorites)) return false;
     const st = getState(q.id, data);
     return st.status !== "new" && st.due <= now;
   });
   // never-attempted items — one unlocked group is 10; the learner may unlock more after finishing
   const quota = loadNewQuota();
   const remaining = Math.max(0, quota.limit - quota.count);
-  const newItems = QUESTIONS.filter(q => getState(q.id, data).status === "new").slice(0, remaining);
+  const newItems = QUESTIONS.filter(q => !isFavorite(q.id, favorites) && getState(q.id, data).status === "new").slice(0, remaining);
   queue = reviewItems.concat(newItems);
 }
 
 function renderStats(){
   const data = loadData();
+  const favorites = loadFavorites();
   const now = Date.now();
   let reviewDue=0, known=0, graduated=0, newTotal=0;
   QUESTIONS.forEach(q=>{
     const st = getState(q.id, data);
-    if(st.status !== "new" && st.due <= now) reviewDue++;
-    if(st.status === "new") newTotal++;
+    const favorite = isFavorite(q.id, favorites);
+    if(!favorite && st.status !== "new" && st.due <= now) reviewDue++;
+    if(!favorite && st.status === "new") newTotal++;
     if(st.status === "known") known++;
     if(st.status === "graduated") graduated++;
   });
@@ -16517,6 +16881,11 @@ function renderStats(){
   if(gradEl) gradEl.textContent = graduated;
   const quotaEl = document.getElementById("stat-newquota");
   if(quotaEl) quotaEl.textContent = quota.count + "/" + quota.limit;
+  const favoritesTotal = favoriteCount(favorites);
+  const favoriteStat = document.getElementById("stat-favorites");
+  if(favoriteStat) favoriteStat.textContent = favoritesTotal;
+  const favoriteTabCount = document.getElementById("favorite-tab-count");
+  if(favoriteTabCount) favoriteTabCount.textContent = favoritesTotal;
 }
 
 function renderReview(rebuild){
@@ -16537,7 +16906,9 @@ function renderReview(rebuild){
       document.getElementById("back-all-btn2").onclick = ()=> activateView(practiceReturnView);
       return;
     }
-    const newLeft = QUESTIONS.filter(q=>getState(q.id, loadData()).status === "new").length;
+    const favorites = loadFavorites();
+    const currentData = loadData();
+    const newLeft = QUESTIONS.filter(q=>!isFavorite(q.id, favorites) && getState(q.id, currentData).status === "new").length;
     slot.innerHTML = `
       <div class="done-msg">
         <div class="big">✓</div>
@@ -16571,7 +16942,10 @@ function renderReview(rebuild){
     <div class="card">
       <div class="card-head">
         <span class="qnum">${q.number}${practiceMode ? "" : " · "+(currentIdx+1)+" / "+queue.length}</span>
-        <span class="tag-pill">${GRAMMAR_GUIDE[q.weakTag].code} · ${q.tagLabel}</span>
+        <div class="card-head-actions">
+          <span class="tag-pill">${GRAMMAR_GUIDE[q.weakTag].code} · ${q.tagLabel}</span>
+          <button class="favorite-btn ${isFavorite(q.id) ? "active" : ""}" id="card-favorite-btn" type="button">${isFavorite(q.id) ? "★ 已收藏" : "☆ 收藏"}</button>
+        </div>
       </div>
       <div class="instr body-font">Use grammar and meaning together to build a sentence that fits the situation.</div>
       <div class="speaker-label body-font">Speaker A</div>
@@ -16590,6 +16964,12 @@ function renderReview(rebuild){
   renderBank(q);
   const backBtn = document.getElementById("back-all-btn");
   if(backBtn) backBtn.onclick = ()=> activateView(practiceReturnView);
+  const favoriteBtn = document.getElementById("card-favorite-btn");
+  if(favoriteBtn) favoriteBtn.onclick = ()=>{
+    const active = toggleFavorite(q.id);
+    favoriteBtn.classList.toggle("active", active);
+    favoriteBtn.textContent = active ? "★ 已收藏" : "☆ 收藏";
+  };
   document.getElementById("clear-btn").onclick = ()=>{
     bank = shuffle(q.candidates.map((t,i)=>({uid:"c"+i, text:t, used:false})));
     slotFill = q.frame.filter(p=>p.blank).map(()=>null);
@@ -16697,6 +17077,7 @@ function doSubmit(q){
   const usedTags = new Set(q.segments.map(s=>s.tag));
   const legendHTML = legendItems.filter(l=>usedTags.has(l[0])).map(l=>`<span><i style="background:${l[2]}"></i>${l[1]}</span>`).join("");
   const sentenceHTML = q.segments.map(s=>`<span class="seg-${s.tag}">${s.t}</span>`).join("");
+  const translations = QUESTION_TRANSLATIONS[q.id] || ["暂无翻译", "暂无翻译"];
 
   const resultArea = document.getElementById("result-area");
   resultArea.innerHTML = `
@@ -16706,6 +17087,10 @@ function doSubmit(q){
     <div class="answer-block">
       <div class="legend body-font">${legendHTML}</div>
       <div class="answer-sentence">${sentenceHTML}</div>
+      <div class="translation-block">
+        <div class="translation-row"><span class="translation-label">题目中文翻译</span>${translations[0]}</div>
+        <div class="translation-row"><span class="translation-label">正确答案中文翻译</span>${translations[1]}</div>
+      </div>
       <div class="explain">
         <span class="label">${correct ? "语法回顾 Grammar recap" : "错在哪 · Why this was wrong"}</span>
         ${q.explainEN}
@@ -16770,10 +17155,13 @@ function formatDue(dueTs){
   return new Date(dueTs).toLocaleDateString("zh-CN")+" 复习";
 }
 
-function questionRowInfo(q, data, now, remaining, newSeenRef){
+function questionRowInfo(q, data, now, remaining, newSeenRef, favorites){
   const st = getState(q.id, data);
   let statusCls, statusLbl, bucket;
-  if(st.status === "graduated" && st.due > now){
+  if(isFavorite(q.id, favorites)){
+    statusCls="status-favorite"; statusLbl="★ 已收藏 · 普通复习已暂停"; bucket="favorite";
+  }
+  else if(st.status === "graduated" && st.due > now){
     statusCls="status-scheduled"; statusLbl = "已掌握 · 下次抽查 "+new Date(st.due).toLocaleDateString("zh-CN"); bucket="done";
   }
   else if(st.status === "new"){
@@ -16793,6 +17181,7 @@ function renderAllList(){
   const data = loadData();
   const now = Date.now();
   const quota = loadNewQuota();
+  const favorites = loadFavorites();
   const remaining = Math.max(0, quota.limit - quota.count);
   const newSeenRef = {n:0};
   const searchEl = document.getElementById("all-search");
@@ -16801,7 +17190,7 @@ function renderAllList(){
 
   const rows = [];
   QUESTIONS.forEach(q=>{
-    const info = questionRowInfo(q, data, now, remaining, newSeenRef);
+    const info = questionRowInfo(q, data, now, remaining, newSeenRef, favorites);
     if(allFilter === "due" && info.bucket !== "due") return;
     if(allFilter === "wrong" && info.bucket !== "wrong") return;
     if(allFilter === "new" && info.bucket !== "new") return;
@@ -16819,6 +17208,7 @@ function renderAllList(){
       </div>
       <div class="qlist-right">
         <div class="qlist-status ${info.statusCls}">${info.statusLbl}</div>
+        <button class="favorite-btn ${isFavorite(q.id, favorites) ? "active" : ""}" data-favorite="${q.id}" type="button">${isFavorite(q.id, favorites) ? "★ 已收藏" : "☆ 收藏"}</button>
         <button class="qlist-go" data-go="${q.id}">做这题 ▸</button>
       </div>
     </div>`);
@@ -16834,18 +17224,96 @@ function renderAllList(){
       el.classList.toggle("masked");
     });
   });
+  list.querySelectorAll("[data-favorite]").forEach(btn=>{
+    btn.addEventListener("click", ev=>{
+      ev.stopPropagation();
+      toggleFavorite(btn.getAttribute("data-favorite"));
+    });
+  });
   list.querySelectorAll(".qlist-row").forEach(row=>{
     row.addEventListener("click", ()=> startPractice(row.getAttribute("data-qid")));
   });
   saveData(data);
 }
 
-function startPractice(qid){
+function renderFavorites(){
+  const favorites = loadFavorites();
+  const data = loadData();
+  const searchEl = document.getElementById("favorite-search");
+  const kw = (searchEl ? searchEl.value : "").trim().toLowerCase();
+  const allFavorites = QUESTIONS
+    .filter(q=>isFavorite(q.id, favorites))
+    .sort((a,b)=>normalizeFavoriteRecord(favorites[b.id]).updatedAt - normalizeFavoriteRecord(favorites[a.id]).updatedAt);
+  const shown = allFavorites.filter(q=>{
+    if(!kw) return true;
+    const guide = GRAMMAR_GUIDE[q.weakTag];
+    const hay = (q.number+" "+q.speakerA+" "+q.answer+" "+q.tagLabel+" "+guide.code+" "+guide.title).toLowerCase();
+    return hay.includes(kw);
+  });
+  const list = document.getElementById("favorite-list");
+  const countEl = document.getElementById("favorite-count");
+  if(countEl) countEl.textContent = `收藏库共 ${allFavorites.length} 题，当前显示 ${shown.length} 题。收藏期间不会进入普通复习；取消收藏不会丢失原记录。`;
+  if(!shown.length){
+    list.innerHTML = `<div class="favorite-empty">${allFavorites.length ? "没有符合搜索条件的收藏题。" : "收藏库还是空的。你可以在复习卡片或全部题目中点击“☆ 收藏”。"}</div>`;
+    refreshFavoriteDisplays(false);
+    return;
+  }
+  list.innerHTML = shown.map(q=>{
+    const st = getState(q.id, data);
+    const attempts = Number(st.attempts || 0);
+    const wrong = Number(st.wrongCount || 0);
+    const progress = attempts ? `已做 ${attempts} 次 · 答错 ${wrong} 次 · 原复习记录保留` : "尚未做过 · 收藏期间暂停进入新题队列";
+    return `<div class="qlist-row" data-favorite-row="${q.id}">
+      <div class="qlist-num">${q.number}</div>
+      <div class="qlist-main">
+        <div class="qlist-prompt">${q.speakerA}</div>
+        <div class="qlist-ans masked" data-reveal="1">${q.answer}</div>
+        <div class="qlist-tag">${GRAMMAR_GUIDE[q.weakTag].code} · ${q.tagLabel} · ${progress}</div>
+      </div>
+      <div class="qlist-right">
+        <div class="qlist-status status-favorite">★ 收藏库</div>
+        <button class="favorite-btn active" data-unfavorite="${q.id}" type="button">取消收藏</button>
+        <button class="qlist-go" data-favorite-go="${q.id}" type="button">单独练习 ▸</button>
+      </div>
+    </div>`;
+  }).join("");
+  list.querySelectorAll(".qlist-ans").forEach(el=>{
+    el.addEventListener("click", ev=>{
+      ev.stopPropagation();
+      el.classList.toggle("masked");
+    });
+  });
+  list.querySelectorAll("[data-unfavorite]").forEach(btn=>{
+    btn.addEventListener("click", ev=>{
+      ev.stopPropagation();
+      toggleFavorite(btn.getAttribute("data-unfavorite"));
+    });
+  });
+  list.querySelectorAll("[data-favorite-go]").forEach(btn=>{
+    btn.addEventListener("click", ev=>{
+      ev.stopPropagation();
+      startPractice(btn.getAttribute("data-favorite-go"), "favorites");
+    });
+  });
+  list.querySelectorAll("[data-favorite-row]").forEach(row=>{
+    row.addEventListener("click", ()=>startPractice(row.getAttribute("data-favorite-row"), "favorites"));
+  });
+  saveData(data);
+}
+
+function refreshFavoriteDisplays(renderLists=true){
+  renderStats();
+  if(!renderLists) return;
+  if(document.getElementById("view-favorites").classList.contains("active")) renderFavorites();
+  if(document.getElementById("view-all").classList.contains("active")) renderAllList();
+}
+
+function startPractice(qid, returnView="all"){
   const q = QUESTIONS.find(x=>x.id===qid);
   if(!q) return;
   practiceMode = true;
   practiceTitle = "单题练习";
-  practiceReturnView = "all";
+  practiceReturnView = returnView;
   queue = [q];
   currentIdx = 0;
   setActiveTab("review");
@@ -16878,6 +17346,7 @@ function setActiveTab(view){
 function activateView(view){
   setActiveTab(view);
   if(view==="all") renderAllList();
+  if(view==="favorites") renderFavorites();
   if(view==="weak") renderWeak();
   if(view==="review"){ practiceMode = false; currentIdx = 0; renderReview(true); }
   window.scrollTo({top:0, behavior:"smooth"});
@@ -16888,6 +17357,7 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
 });
 
 document.getElementById("all-search").addEventListener("input", ()=> renderAllList());
+document.getElementById("favorite-search").addEventListener("input", ()=> renderFavorites());
 document.querySelectorAll(".all-filter").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     document.querySelectorAll(".all-filter").forEach(b=>b.classList.remove("active"));
