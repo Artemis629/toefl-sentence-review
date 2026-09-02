@@ -423,6 +423,21 @@
     background:var(--clay-mist); color:var(--clay); border-radius:12px;
     padding:10px 14px; margin-bottom:14px; font-size:12.5px; font-weight:600;
   }
+  .sprint-note{
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;
+    background:linear-gradient(135deg,#eef8f5,#fff8ed); color:var(--ink);
+    border:1px solid #cfe3de; border-radius:12px; padding:14px 16px;
+    margin-bottom:16px; font-size:13px; line-height:1.7;
+  }
+  .sprint-note b{color:var(--teal-deep);}
+  .sprint-round-banner{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    background:var(--teal-mist); color:var(--teal-deep); border-radius:12px;
+    padding:10px 14px; margin-bottom:14px; font-size:12.5px; font-weight:700;
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;
+  }
+  .sprint-danger{background:var(--error); color:#fff;}
+  .sprint-danger:hover{background:#8f4037;}
   .qlist-status{font-size:11px; font-weight:700; padding:4px 10px; border-radius:100px; white-space:nowrap;}
   .status-due{background:var(--error-mist); color:var(--error);}
   .status-scheduled{background:var(--teal-mist); color:var(--teal-deep);}
@@ -471,6 +486,7 @@
 
 <nav class="body-font">
   <button class="tab-btn active" data-view="review">复习 Review</button>
+  <button class="tab-btn" data-view="sprint">考前速刷 Sprint <span id="sprint-tab-count">0</span></button>
   <button class="tab-btn" data-view="favorites">收藏库 Favorites <span id="favorite-tab-count">0</span></button>
   <button class="tab-btn" data-view="weak">薄弱点分析 Weak Points</button>
   <button class="tab-btn" data-view="method">专项方法 Method</button>
@@ -489,6 +505,18 @@
       <div class="stat"><div class="num" id="stat-favorites">0</div><div class="lbl">已收藏（不进入普通复习）</div></div>
     </div>
     <div id="review-slot"></div>
+  </div>
+
+  <div class="view" id="view-sprint">
+    <div class="sprint-note"><b>考前速刷与艾宾浩斯完全分开。</b>这里只刷“从未做过”和“做过但一次都没答对”的题；已熟悉、已掌握及收藏题自动排除。速刷答对或答错都不会改变原来的做题次数、熟练度、复习日期和薄弱点统计，但速刷进度会随账号同步。</div>
+    <div class="stat-row body-font">
+      <div class="stat"><div class="num" id="sprint-stat-unseen">0</div><div class="lbl">从未做过</div></div>
+      <div class="stat"><div class="num" id="sprint-stat-never-correct">0</div><div class="lbl">做过但从未答对</div></div>
+      <div class="stat"><div class="num" id="sprint-stat-left">0</div><div class="lbl">本轮剩余</div></div>
+      <div class="stat"><div class="num" id="sprint-stat-failed">0</div><div class="lbl">当前未通过</div></div>
+      <div class="stat"><div class="num" id="sprint-stat-passed">0</div><div class="lbl">本轮速刷已过</div></div>
+    </div>
+    <div id="sprint-slot"></div>
   </div>
 
   <div class="view" id="view-weak">
@@ -16906,6 +16934,7 @@ const STORAGE_KEY = "sentence_review_data_v1";
 const TAGSTAT_KEY = "sentence_review_tagstats_v1";
 const NEWQUOTA_KEY = "sentence_review_newquota_v1";
 const FAVORITES_KEY = "sentence_review_favorites_v1";
+const SPRINT_KEY = "sentence_review_sprint_v1";
 const MINUTE = 60*1000;
 const HOUR = 60*MINUTE;
 const DAY = 24*HOUR;
@@ -17010,6 +17039,64 @@ function toggleFavorite(qid){
   return nextActive;
 }
 
+function emptySprintState(){
+  return {version:1, cycleId:"", eligibleIds:[], roundNumber:1, roundIds:[], answered:{}, results:{}, completedAt:0, updatedAt:0};
+}
+function normalizeSprintState(value){
+  const base = emptySprintState();
+  const s = value && typeof value === "object" ? value : {};
+  return {
+    ...base, ...s,
+    eligibleIds:Array.isArray(s.eligibleIds) ? s.eligibleIds.filter(id=>typeof id === "string") : [],
+    roundIds:Array.isArray(s.roundIds) ? s.roundIds.filter(id=>typeof id === "string") : [],
+    answered:s.answered && typeof s.answered === "object" ? s.answered : {},
+    results:s.results && typeof s.results === "object" ? s.results : {},
+    roundNumber:Math.max(1, Number(s.roundNumber || 1)),
+    completedAt:Number(s.completedAt || 0),
+    updatedAt:Number(s.updatedAt || 0)
+  };
+}
+function loadSprint(){
+  try{ return normalizeSprintState(JSON.parse(localStorage.getItem(SPRINT_KEY) || "{}")); }
+  catch(e){ return emptySprintState(); }
+}
+function saveSprint(s){
+  const next = normalizeSprintState(s);
+  next.updatedAt = Date.now();
+  try{ localStorage.setItem(SPRINT_KEY, JSON.stringify(next)); }catch(e){}
+  scheduleCloudPush();
+  return next;
+}
+function isMainFamiliar(st){
+  return !!st && (st.status === "known" || st.status === "graduated" || st.graduated === true);
+}
+function sprintEligibleIds(){
+  const data = loadData();
+  const favorites = loadFavorites();
+  return QUESTIONS.filter(q=>{
+    const st = getState(q.id, data);
+    if(isFavorite(q.id, favorites) || isMainFamiliar(st)) return false;
+    return Number(st.attempts || 0) === 0 || Number(st.correctCount || 0) === 0;
+  }).map(q=>q.id);
+}
+function createSprintCycle(){
+  const ids = shuffle(sprintEligibleIds());
+  return saveSprint({
+    version:1,
+    cycleId:String(Date.now())+"-"+Math.random().toString(36).slice(2,8),
+    eligibleIds:ids.slice(), roundNumber:1, roundIds:ids.slice(),
+    answered:{}, results:{}, completedAt:ids.length ? 0 : Date.now(), updatedAt:Date.now()
+  });
+}
+function mergeSprintStates(localSprint, remoteSprint){
+  const l = normalizeSprintState(localSprint);
+  const r = normalizeSprintState(remoteSprint);
+  if(!l.cycleId) return r;
+  if(!r.cycleId) return l;
+  if(l.cycleId !== r.cycleId) return r.updatedAt > l.updatedAt ? r : l;
+  return r.updatedAt > l.updatedAt ? r : l;
+}
+
 function cloudIsConfigured(){
   const url = CLOUD_CONFIG.supabaseUrl || "";
   const key = CLOUD_CONFIG.supabasePublishableKey || "";
@@ -17039,11 +17126,12 @@ function updateCloudControls(){
 
 function localPayload(){
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     data: loadData(),
     tagStats: loadTagStats(),
     newQuota: loadNewQuota(),
     favorites: loadFavorites(),
+    sprint: loadSprint(),
     savedAt: Date.now()
   };
 }
@@ -17118,11 +17206,12 @@ function mergePayloads(local, remote){
   return {
     ...r,
     ...l,
-    schemaVersion:3,
+    schemaVersion:4,
     data:mergedData,
     tagStats:mergedTags,
     newQuota:mergedQuota,
     favorites:mergedFavorites,
+    sprint:mergeSprintStates(l.sprint, r.sprint),
     savedAt:Date.now()
   };
 }
@@ -17134,6 +17223,7 @@ function applyPayloadLocally(payload){
     localStorage.setItem(TAGSTAT_KEY, JSON.stringify(payload.tagStats || {}));
     localStorage.setItem(NEWQUOTA_KEY, JSON.stringify(payload.newQuota || {date:todayStr(), count:0, limit:NEW_GROUP_SIZE}));
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(payload.favorites || {}));
+    if(payload.sprint) localStorage.setItem(SPRINT_KEY, JSON.stringify(normalizeSprintState(payload.sprint)));
   } finally {
     cloudApplyInProgress = false;
   }
@@ -17172,6 +17262,7 @@ function refreshAfterCloudMerge(){
   if(document.getElementById("view-weak").classList.contains("active")) renderWeak();
   if(document.getElementById("view-all").classList.contains("active")) renderAllList();
   if(document.getElementById("view-favorites").classList.contains("active")) renderFavorites();
+  if(document.getElementById("view-sprint").classList.contains("active")) renderSprint();
 }
 
 async function syncCloudProgress(){
@@ -17619,6 +17710,208 @@ function doSubmit(q){
   document.getElementById("next-btn").onclick = ()=>{ currentIdx++; renderReview(); };
 }
 
+function sprintCounts(s){
+  const data = loadData();
+  let unseen=0, neverCorrect=0;
+  (s.eligibleIds || []).forEach(qid=>{
+    const st = getState(qid, data);
+    if(Number(st.attempts || 0) === 0) unseen++;
+    else if(Number(st.correctCount || 0) === 0) neverCorrect++;
+  });
+  const unanswered = (s.roundIds || []).filter(id=>!s.answered[id]).length;
+  const passed = Object.values(s.results || {}).filter(r=>r && r.status === "passed").length;
+  const failed = Object.values(s.results || {}).filter(r=>r && r.status === "failed").length;
+  return {unseen, neverCorrect, unanswered, passed, failed};
+}
+
+function updateSprintStats(s){
+  const c = sprintCounts(s);
+  const values = {
+    "sprint-stat-unseen":c.unseen,
+    "sprint-stat-never-correct":c.neverCorrect,
+    "sprint-stat-left":c.unanswered,
+    "sprint-stat-failed":c.failed,
+    "sprint-stat-passed":c.passed,
+    "sprint-tab-count":c.unanswered || c.failed
+  };
+  Object.entries(values).forEach(([id,value])=>{
+    const el = document.getElementById(id);
+    if(el) el.textContent = value;
+  });
+}
+
+function pruneSprintAgainstMain(s){
+  const allowed = new Set(sprintEligibleIds());
+  const before = (s.eligibleIds || []).length + (s.roundIds || []).length;
+  s.eligibleIds = (s.eligibleIds || []).filter(id=>allowed.has(id));
+  s.roundIds = (s.roundIds || []).filter(id=>allowed.has(id));
+  const after = s.eligibleIds.length + s.roundIds.length;
+  return before === after ? s : saveSprint(s);
+}
+
+function beginNextSprintRound(){
+  let s = loadSprint();
+  const failed = (s.roundIds || []).filter(id=>s.answered[id] && s.answered[id].correct === false);
+  if(!failed.length){
+    s.completedAt = Date.now();
+    s.roundIds = [];
+    s.answered = {};
+  } else {
+    s.roundNumber += 1;
+    s.roundIds = shuffle(failed);
+    s.answered = {};
+    s.completedAt = 0;
+  }
+  saveSprint(s);
+  renderSprint();
+}
+
+function resetSprintCycle(){
+  if(!window.confirm("只清空“考前速刷”的通过/未通过记录并重新生成一轮。原来的艾宾浩斯记录、做题次数、收藏和复习日期都不会被删除。确定继续吗？")) return;
+  createSprintCycle();
+  renderSprint();
+}
+
+function renderSprint(){
+  let s = loadSprint();
+  if(!s.cycleId) s = createSprintCycle();
+  s = pruneSprintAgainstMain(s);
+  updateSprintStats(s);
+  const slot = document.getElementById("sprint-slot");
+  if(!slot) return;
+
+  const unansweredIds = (s.roundIds || []).filter(id=>!s.answered[id]);
+  if(!unansweredIds.length){
+    const failedIds = (s.roundIds || []).filter(id=>s.answered[id] && s.answered[id].correct === false);
+    if(failedIds.length){
+      slot.innerHTML = `<div class="done-msg">
+        <div class="big">↻</div>
+        第 ${s.roundNumber} 轮完成：本轮还有 <b>${failedIds.length}</b> 题未通过。<br>
+        下一轮只重刷这些错题，已经答对的题不会再出现。
+        <div class="action-row" style="justify-content:center; margin-top:18px;">
+          <button class="btn btn-primary" id="sprint-next-round-btn">开始第 ${s.roundNumber+1} 轮（${failedIds.length}题）</button>
+        </div>
+      </div>`;
+      document.getElementById("sprint-next-round-btn").onclick = beginNextSprintRound;
+      return;
+    }
+    if(!s.completedAt){ s.completedAt = Date.now(); s = saveSprint(s); }
+    const total = (s.eligibleIds || []).length;
+    slot.innerHTML = `<div class="done-msg">
+      <div class="big">✓</div>
+      ${total ? `本次速刷已清零，共通过 ${total} 题。` : "目前没有符合速刷条件的题。"}<br>
+      艾宾浩斯记录没有被改动。需要重新速刷时，只清空速刷记忆即可。
+      <div class="action-row" style="justify-content:center; margin-top:18px;">
+        <button class="btn sprint-danger" id="sprint-reset-btn">清空速刷记录并重做</button>
+      </div>
+    </div>`;
+    document.getElementById("sprint-reset-btn").onclick = resetSprintCycle;
+    return;
+  }
+
+  const qid = unansweredIds[0];
+  const q = QUESTIONS.find(item=>item.id === qid);
+  if(!q){ s.answered[qid] = {correct:true, updatedAt:Date.now()}; saveSprint(s); renderSprint(); return; }
+  const doneThisRound = s.roundIds.length - unansweredIds.length;
+  submitted = false;
+  bank = shuffle(q.candidates.map((t,i)=>({uid:"c"+i, text:t, used:false})));
+  slotFill = q.frame.filter(p=>p.blank).map(()=>null);
+  slot.innerHTML = `
+    <div class="sprint-round-banner">
+      <span>第 ${s.roundNumber} 轮 · ${doneThisRound+1} / ${s.roundIds.length}</span>
+      <span>独立速刷：不改动艾宾浩斯进度</span>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <span class="qnum">${q.number}</span>
+        <div class="card-head-actions"><span class="tag-pill">${GRAMMAR_GUIDE[q.weakTag].code} · ${q.tagLabel}</span></div>
+      </div>
+      <div class="instr body-font">Use grammar and meaning together to build a sentence that fits the situation.</div>
+      <div class="speaker-label body-font">Speaker A</div>
+      <div class="prompt-a">${q.speakerA}</div>
+      <div class="speaker-label body-font">Speaker B</div>
+      <div class="sentence-frame" id="frame-area"></div>
+      <div class="bank" id="bank-area"></div>
+      <div class="action-row">
+        <button class="btn btn-ghost" id="clear-btn">清空重来</button>
+        <button class="btn btn-primary" id="submit-btn" disabled>提交检查</button>
+      </div>
+      <div id="result-area"></div>
+    </div>`;
+  renderFrame(q);
+  renderBank(q);
+  document.getElementById("clear-btn").onclick = ()=>{
+    bank = shuffle(q.candidates.map((t,i)=>({uid:"c"+i, text:t, used:false})));
+    slotFill = q.frame.filter(p=>p.blank).map(()=>null);
+    renderFrame(q); renderBank(q);
+  };
+  document.getElementById("submit-btn").onclick = ()=>doSprintSubmit(q);
+}
+
+function doSprintSubmit(q){
+  submitted = true;
+  document.getElementById("submit-btn").disabled = true;
+  document.getElementById("clear-btn").disabled = true;
+  document.querySelectorAll("#sprint-slot #bank-area .tile").forEach(t=>t.disabled=true);
+  const given = slotFill.map(item=>item ? item.text.trim().toLowerCase() : "");
+  const target = q.correct.map(item=>item.trim().toLowerCase());
+  let correct = given.length === target.length;
+  const marks = given.map((value,i)=>{
+    const ok = value === target[i];
+    if(!ok) correct = false;
+    return ok;
+  });
+  document.querySelectorAll("#sprint-slot .blank-slot").forEach((elm,i)=>{
+    elm.classList.remove("filled");
+    elm.classList.add(marks[i] ? "correct" : "wrong");
+  });
+
+  let s = loadSprint();
+  const now = Date.now();
+  const old = s.results[q.id] || {attempts:0, wrongCount:0, correctCount:0};
+  s.answered[q.id] = {correct, updatedAt:now};
+  s.results[q.id] = {
+    status:correct ? "passed" : "failed",
+    attempts:Number(old.attempts || 0)+1,
+    wrongCount:Number(old.wrongCount || 0)+(correct ? 0 : 1),
+    correctCount:Number(old.correctCount || 0)+(correct ? 1 : 0),
+    updatedAt:now
+  };
+  s = saveSprint(s);
+  updateSprintStats(s);
+
+  const legendItems = [
+    ["neg","否定谓语 negation","var(--error)"],["inf","不定式 infinitive","var(--clay)"],
+    ["relclause","定语从句 relative clause","var(--teal)"],["nounclause","名词性从句 noun clause","var(--teal-deep)"],
+    ["participle","分词后置定语 participle","var(--clay)"],["causative","使役结构 causative","#8a4a9e"],
+    ["advclause","状语从句 adverbial clause","#8a4a9e"]
+  ];
+  const usedTags = new Set(q.segments.map(seg=>seg.tag));
+  const legendHTML = legendItems.filter(item=>usedTags.has(item[0])).map(item=>`<span><i style="background:${item[2]}"></i>${item[1]}</span>`).join("");
+  const sentenceHTML = q.segments.map(seg=>`<span class="seg-${seg.tag}">${seg.t}</span>`).join("");
+  const translations = QUESTION_TRANSLATIONS[q.id] || ["暂无翻译", "暂无翻译"];
+  document.getElementById("result-area").innerHTML = `
+    <div class="result-banner ${correct ? "result-good" : "result-bad"} body-font">
+      ${correct ? "✓ 本轮通过 — 将从速刷待刷区移出" : "✗ 本轮未通过 — 下一轮会继续出现"}
+    </div>
+    <div class="answer-block">
+      <div class="legend body-font">${legendHTML}</div>
+      <div class="answer-sentence">${sentenceHTML}</div>
+      <div class="translation-block">
+        <div class="translation-row"><span class="translation-label">题目中文翻译</span>${translations[0]}</div>
+        <div class="translation-row"><span class="translation-label">正确答案中文翻译</span>${translations[1]}</div>
+      </div>
+      ${deepExplanationHTML(q,correct)}
+      <div class="explain"><span class="label">英文语法说明 · English grammar note</span>${q.explainEN}</div>
+      <div class="grammar-diagnostic">
+        <div class="diag-head">速刷结果只记在速刷模块</div>
+        原有做题次数、答错次数、记忆阶段和下次复习日期均未改变。
+      </div>
+      <div class="action-row"><button class="btn btn-next" id="sprint-next-btn">下一题</button></div>
+    </div>`;
+  document.getElementById("sprint-next-btn").onclick = renderSprint;
+}
+
 function renderWeak(){
   const stats = loadTagStats();
   const tagsInBank = [...new Set(QUESTIONS.map(q=>q.weakTag))];
@@ -17817,6 +18110,8 @@ function renderFavorites(){
 
 function refreshFavoriteDisplays(renderLists=true){
   renderStats();
+  const sprintView = document.getElementById("view-sprint");
+  if(sprintView && sprintView.classList.contains("active")) renderSprint();
   if(!renderLists) return;
   if(document.getElementById("view-favorites").classList.contains("active")) renderFavorites();
   if(document.getElementById("view-all").classList.contains("active")) renderAllList();
@@ -17855,6 +18150,10 @@ function setActiveTab(view){
   });
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.getElementById("view-"+view).classList.add("active");
+  const reviewSlot = document.getElementById("review-slot");
+  const sprintSlot = document.getElementById("sprint-slot");
+  if(view === "sprint" && reviewSlot) reviewSlot.innerHTML = "";
+  if(view === "review" && sprintSlot) sprintSlot.innerHTML = "";
 }
 
 function activateView(view){
@@ -17862,6 +18161,7 @@ function activateView(view){
   if(view==="all") renderAllList();
   if(view==="favorites") renderFavorites();
   if(view==="weak") renderWeak();
+  if(view==="sprint") renderSprint();
   if(view==="review"){ practiceMode = false; currentIdx = 0; renderReview(true); }
   window.scrollTo({top:0, behavior:"smooth"});
 }
@@ -17908,6 +18208,7 @@ document.addEventListener("visibilitychange", ()=>{
 });
 
 renderReview();
+updateSprintStats(loadSprint().cycleId ? loadSprint() : emptySprintState());
 initCloudSync();
 </script>
 
