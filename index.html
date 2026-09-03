@@ -438,6 +438,14 @@
   }
   .sprint-danger{background:var(--error); color:#fff;}
   .sprint-danger:hover{background:#8f4037;}
+  .export-panel{
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; margin:0 0 18px; box-shadow:var(--shadow);
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;
+  }
+  .export-panel-title{font-weight:800; color:var(--teal-deep); font-size:14px;}
+  .export-panel-sub{color:var(--ink-soft); font-size:12px; line-height:1.6; margin-top:3px;}
   .qlist-status{font-size:11px; font-weight:700; padding:4px 10px; border-radius:100px; white-space:nowrap;}
   .status-due{background:var(--error-mist); color:var(--error);}
   .status-scheduled{background:var(--teal-mist); color:var(--teal-deep);}
@@ -509,6 +517,10 @@
 
   <div class="view" id="view-sprint">
     <div class="sprint-note"><b>考前速刷与艾宾浩斯完全分开。</b>这里只刷“从未做过”和“做过但一次都没答对”的题；已熟悉、已掌握及收藏题自动排除。速刷答对或答错都不会改变原来的做题次数、熟练度、复习日期和薄弱点统计，但速刷进度会随账号同步。</div>
+    <div class="export-panel">
+      <div><div class="export-panel-title">打印考前高优先级错题</div><div class="export-panel-sub">合并“速刷至少二刷仍错”与“艾宾浩斯累计错 ≥ 2 次”的题，自动去重并标明来源。</div></div>
+      <button class="btn btn-primary wrong-export-btn" type="button">生成打印版 / PDF</button>
+    </div>
     <div class="stat-row body-font">
       <div class="stat"><div class="num" id="sprint-stat-unseen">0</div><div class="lbl">从未做过</div></div>
       <div class="stat"><div class="num" id="sprint-stat-never-correct">0</div><div class="lbl">做过但从未答对</div></div>
@@ -521,7 +533,11 @@
 
   <div class="view" id="view-weak">
     <div class="weak-headline">薄弱点排行（根据你的实际答错记录）</div>
-    <div class="weak-sub">每次你填错一题，系统会把这道题归到固定的 G01-G11 语法编号下计数。答错同一题第 2 次起，答案页会显示“反复错误预警”；把编号输入配套《语法弱点学习手册》即可直达对应章节。</div>
+    <div class="weak-sub">统计现在会同时显示艾宾浩斯复习错误与考前速刷错误，并分别列出次数。答错同一题第 2 次起，答案页会显示“反复错误预警”；把编号输入配套《语法弱点学习手册》即可直达对应章节。</div>
+    <div class="export-panel">
+      <div><div class="export-panel-title">导出当前高优先级错题</div><div class="export-panel-sub" id="wrong-export-summary">正在统计……</div></div>
+      <button class="btn btn-primary wrong-export-btn" type="button">生成打印版 / PDF</button>
+    </div>
     <div id="rank-list"></div>
     <div id="grammar-cards"></div>
   </div>
@@ -17912,16 +17928,116 @@ function doSprintSubmit(q){
   document.getElementById("sprint-next-btn").onclick = renderSprint;
 }
 
+function sprintWrongStatsByTag(){
+  const results = loadSprint().results || {};
+  const byTag = {};
+  QUESTIONS.forEach(q=>{
+    const r = results[q.id];
+    const wrong = Number(r && r.wrongCount || 0);
+    if(!wrong) return;
+    if(!byTag[q.weakTag]) byTag[q.weakTag] = {questions:0, attempts:0};
+    byTag[q.weakTag].questions += 1;
+    byTag[q.weakTag].attempts += wrong;
+  });
+  return byTag;
+}
+
+function wrongExportData(){
+  const data = loadData();
+  const sprintResults = loadSprint().results || {};
+  const items = [];
+  QUESTIONS.forEach(q=>{
+    const st = getState(q.id, data);
+    const sr = sprintResults[q.id] || {};
+    const mainWrong = Number(st.wrongCount || 0);
+    const sprintAttempts = Number(sr.attempts || 0);
+    const sprintWrong = Number(sr.wrongCount || 0);
+    const sprintSecondStillWrong = sr.status === "failed" && sprintAttempts >= 2;
+    const mainRepeatedWrong = mainWrong >= 2;
+    if(!sprintSecondStillWrong && !mainRepeatedWrong) return;
+    items.push({q, mainWrong, sprintAttempts, sprintWrong, sprintSecondStillWrong, mainRepeatedWrong});
+  });
+  items.sort((a,b)=>{
+    const priorityA = Number(a.sprintSecondStillWrong)+Number(a.mainRepeatedWrong);
+    const priorityB = Number(b.sprintSecondStillWrong)+Number(b.mainRepeatedWrong);
+    return priorityB-priorityA || b.sprintWrong-a.sprintWrong || b.mainWrong-a.mainWrong;
+  });
+  return items;
+}
+
+function updateWrongExportSummary(){
+  const items = wrongExportData();
+  const sprint = items.filter(item=>item.sprintSecondStillWrong).length;
+  const main = items.filter(item=>item.mainRepeatedWrong).length;
+  const both = items.filter(item=>item.sprintSecondStillWrong && item.mainRepeatedWrong).length;
+  const el = document.getElementById("wrong-export-summary");
+  if(el) el.textContent = `速刷二刷仍错 ${sprint} 题 · 艾宾浩斯反复错 ${main} 题 · 重合 ${both} 题 · 去重后共 ${items.length} 题`;
+  return {items,sprint,main,both};
+}
+
+function openWrongPrintView(){
+  const summary = updateWrongExportSummary();
+  if(!summary.items.length){
+    window.alert("目前没有符合条件的高优先级错题：速刷二刷仍错为 0，艾宾浩斯累计错至少 2 次的题也为 0。");
+    return;
+  }
+  const byTag = {};
+  summary.items.forEach(item=>{
+    const tag = item.q.weakTag;
+    if(!byTag[tag]) byTag[tag] = {count:0, sprint:0, main:0};
+    byTag[tag].count += 1;
+    if(item.sprintSecondStillWrong) byTag[tag].sprint += 1;
+    if(item.mainRepeatedWrong) byTag[tag].main += 1;
+  });
+  const tagRows = Object.entries(byTag).sort((a,b)=>b[1].count-a[1].count).map(([tag,row])=>{
+    const guide = GRAMMAR_GUIDE[tag];
+    return `<tr><td>${escapeHTML(guide.code)}</td><td>${escapeHTML(guide.title)}</td><td>${row.count}</td><td>${row.sprint}</td><td>${row.main}</td></tr>`;
+  }).join("");
+  const cards = summary.items.map((item,index)=>{
+    const q = item.q;
+    const guide = GRAMMAR_GUIDE[q.weakTag];
+    const translations = QUESTION_TRANSLATIONS[q.id] || ["暂无翻译","暂无翻译"];
+    const badges = [
+      item.sprintSecondStillWrong ? `<span class="badge sprint">速刷二刷仍错 · 速刷错 ${item.sprintWrong} 次</span>` : "",
+      item.mainRepeatedWrong ? `<span class="badge main">艾宾浩斯累计错 ${item.mainWrong} 次</span>` : ""
+    ].join("");
+    return `<section class="question">
+      <div class="qhead"><b>${index+1}. ${escapeHTML(q.number)}</b><div>${badges}</div></div>
+      <div class="grammar">${escapeHTML(guide.code)} · ${escapeHTML(guide.title)} · ${escapeHTML(q.tagLabel)}</div>
+      <div class="label">题目 / Speaker A</div><div class="english">${escapeHTML(q.speakerA)}</div>
+      <div class="translation">${escapeHTML(translations[0])}</div>
+      <div class="label">正确答案 / Speaker B</div><div class="answer">${escapeHTML(q.answer)}</div>
+      <div class="translation">${escapeHTML(translations[1])}</div>
+      <div class="explain"><b>本题拆解：</b>${escapeHTML(q.explainZH)}</div>
+      <div class="action"><b>重做动作：</b>${escapeHTML(guide.action)}</div>
+    </section>`;
+  }).join("");
+  const popup = window.open("", "_blank");
+  if(!popup){ window.alert("浏览器阻止了打印窗口。请允许此网站打开弹出窗口后再试一次。"); return; }
+  popup.document.open();
+  popup.document.write(`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TOEFL 考前高优先级错题</title><style>
+    *{box-sizing:border-box} body{margin:0;background:#f3f0e9;color:#263b37;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.65}
+    .page{max-width:850px;margin:0 auto;padding:34px 28px 60px}.top{background:#164f4a;color:#fff;border-radius:16px;padding:24px 28px}.top h1{margin:0 0 8px;font-size:26px}.top p{margin:4px 0;color:#e4f2ef;font-size:13px}.toolbar{position:sticky;top:0;text-align:right;padding:10px 0;background:#f3f0e9}.print{border:0;border-radius:9px;background:#b7793f;color:#fff;padding:10px 16px;font-weight:700;cursor:pointer}
+    .summary,.question{background:#fff;border:1px solid #ddd7ca;border-radius:12px;margin-top:16px;padding:18px 20px}.summary h2{margin:0 0 10px;font-size:18px;color:#164f4a}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;border-bottom:1px solid #e8e3d9;padding:7px}
+    .qhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.qhead b{color:#164f4a}.badge{display:inline-block;border-radius:99px;padding:3px 8px;margin:0 0 4px 5px;font-size:10px;font-weight:700}.badge.sprint{background:#f7e8dd;color:#9b4c39}.badge.main{background:#e3f2ef;color:#17665e}.grammar{font-size:11px;color:#a56834;margin:6px 0 13px}.label{font-size:10px;font-weight:800;color:#76827f;text-transform:uppercase;letter-spacing:.05em;margin-top:9px}.english,.answer{font-family:Georgia,"Times New Roman",serif;font-size:16px}.answer{font-weight:700;color:#164f4a}.translation{font-size:12px;color:#5d6d69}.explain,.action{font-size:12px;margin-top:10px;padding:9px 11px;border-radius:8px;background:#f7f5ef}.action{background:#eaf5f2;color:#164f4a}
+    @media print{body{background:#fff}.page{max-width:none;padding:0}.toolbar{display:none}.top{border-radius:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}.question{break-inside:avoid;box-shadow:none}.summary{break-inside:avoid}@page{size:A4;margin:12mm}}
+  </style></head><body><div class="page"><div class="toolbar"><button class="print" onclick="window.print()">打印 / 保存为 PDF</button></div><header class="top"><h1>TOEFL 考前高优先级错题</h1><p>生成日期：${escapeHTML(new Date().toLocaleDateString("zh-CN"))}</p><p>速刷二刷仍错 ${summary.sprint} 题 · 艾宾浩斯反复错 ${summary.main} 题 · 重合 ${summary.both} 题 · 去重后 ${summary.items.length} 题</p><p>电脑选择“另存为 PDF”；iPhone/iPad 在打印预览中双指放大页面，再点分享并存储到“文件”。</p></header><section class="summary"><h2>错题类型分布</h2><table><thead><tr><th>编号</th><th>语法类型</th><th>去重题数</th><th>速刷题数</th><th>曲线题数</th></tr></thead><tbody>${tagRows}</tbody></table></section>${cards}</div></body></html>`);
+  popup.document.close();
+}
+
 function renderWeak(){
   const stats = loadTagStats();
+  const sprintStats = sprintWrongStatsByTag();
   const tagsInBank = [...new Set(QUESTIONS.map(q=>q.weakTag))];
   const rows = tagsInBank.map(tag=>({
     tag,
-    count: stats[tag] || 0,
+    mainCount: Number(stats[tag] || 0),
+    sprintCount: Number(sprintStats[tag] && sprintStats[tag].attempts || 0),
+    sprintQuestions: Number(sprintStats[tag] && sprintStats[tag].questions || 0),
     total: QUESTIONS.filter(q=>q.weakTag===tag).length,
     title: GRAMMAR_POINTS[tag].title,
     guide: GRAMMAR_GUIDE[tag]
-  })).sort((a,b)=> b.count - a.count);
+  })).map(row=>({...row,count:row.mainCount+row.sprintCount})).sort((a,b)=> b.count - a.count);
 
   const maxCount = Math.max(1, ...rows.map(r=>r.count));
   const rankList = document.getElementById("rank-list");
@@ -17933,7 +18049,7 @@ function renderWeak(){
         <div class="rank-num">${i+1}</div>
         <div class="rank-name"><span class="grammar-code">${r.guide.code}</span>${r.title}</div>
         <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${(r.count/maxCount*100)}%"></div></div>
-        <div class="rank-count">答错 ${r.count} 次</div>
+        <div class="rank-count" style="width:132px; line-height:1.45;">合计 ${r.count} 次<br><span style="font-weight:500;">曲线 ${r.mainCount} · 速刷 ${r.sprintCount}</span></div>
       </div>
     `).join("");
   }
@@ -17943,8 +18059,9 @@ function renderWeak(){
     const gp = GRAMMAR_POINTS[r.tag];
     return `
       <div class="grammar-card">
-        <div class="freq">覆盖 ${r.total} 题 · 累计答错 ${r.count} 次</div>
+        <div class="freq">覆盖 ${r.total} 题 · 合计错 ${r.count} 次</div>
         <h3><span class="grammar-code">${r.guide.code}</span>${gp.title}</h3>
+        <p><b>错误来源：</b>艾宾浩斯复习错 ${r.mainCount} 次；考前速刷 ${r.sprintQuestions} 道题出错，共错 ${r.sprintCount} 次。</p>
         <p><b>核心规则：</b>${gp.coreZH}</p>
         <p><b>English:</b> ${gp.coreEN}</p>
         <div class="examples">${gp.tip}</div>
@@ -17952,6 +18069,7 @@ function renderWeak(){
       </div>
     `;
   }).join("");
+  updateWrongExportSummary();
 }
 
 function formatDue(dueTs){
@@ -18186,6 +18304,10 @@ document.querySelectorAll(".practice-set").forEach(btn=>{
     btn.getAttribute("data-practice-tags"),
     btn.getAttribute("data-practice-label")
   ));
+});
+
+document.querySelectorAll(".wrong-export-btn").forEach(btn=>{
+  btn.addEventListener("click", openWrongPrintView);
 });
 
 document.getElementById("cloud-login-btn").addEventListener("click", ()=>sendMagicLink());
